@@ -495,9 +495,25 @@ Este comprobante fue generado el ${currentDate}`;
 
   downloadCurrentPdf() {
     if (!this.currentPdfDoc || !this.currentTransactionForModal) return;
-    const { officialDisplayName } = this.currentTransactionForModal;
+
+    // 1. Desestructuramos para obtener las propiedades que necesitamos del objeto de la transacción.
+    //    Añadimos 'valeNumber' a la lista.
+    const { officialDisplayName, valeNumber } = this.currentTransactionForModal;
+
+    // 2. Obtenemos la fecha de hoy en un formato amigable para nombres de archivo (YYYY-MM-DD).
     const date = new Date().toISOString().split('T')[0];
-    this.currentPdfDoc.save(`Vale_${officialDisplayName.replace(/\s/g, '_')}_${date}.pdf`);
+    
+    // 3. Preparamos los componentes del nombre del archivo.
+    //    - Si 'valeNumber' no existe, usamos 'SN' (Sin Número) como valor por defecto.
+    //    - Reemplazamos los espacios en el nombre por guiones bajos para evitar problemas en algunos sistemas.
+    const valeId = valeNumber || 'SN';
+    const sanitizedName = officialDisplayName.replace(/\s/g, '_');
+
+    // 4. Ensamblamos el nombre del archivo final con el nuevo formato.
+    const filename = `Vale_${valeId}_${sanitizedName}_${date}.pdf`;
+
+    // 5. Guardamos el PDF con el nuevo nombre.
+    this.currentPdfDoc.save(filename);
   }
 
   exportToExcel() {
