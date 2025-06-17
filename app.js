@@ -408,8 +408,7 @@ handleEmailVale() {
   const body = encodeURIComponent(this.createEmailBody(transaction, paymentConcept, currentDate));
   
   const emailAction = () => {
-     const mailtoLink = `mailto:${transaction.email === 'correo@reemplazame.cl' ? '' : transaction.email}?subject=${subject}&body=${body}`;
-    window.open(mailtoLink, '_blank');
+    window.location.href = `mailto:${transaction.email === 'correo@reemplazame.cl' ? '' : transaction.email}?subject=${subject}&body=${body}`;
     alert("Se abrirá su cliente de correo. No olvide adjuntar el PDF descargado.");
     this.sentVales.add(transaction.id);
     this.updateSentValesStorage();
