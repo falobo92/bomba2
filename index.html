@@ -6,10 +6,10 @@
     <title>Sistema de Tesorería - Segunda Compañía</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 </head>
 <body>
     <div class="app-container">
-        <!-- Header Principal -->
         <header class="main-header">
             <div class="header-wrapper">
                 <img src="escudo-original.png" alt="Segunda Compañía" class="header-logo">
@@ -20,14 +20,11 @@
             </div>
         </header>
 
-        <!-- Contenido Principal -->
         <main class="main-content">
-            <!-- Panel de Control -->
             <section class="control-panel">
-                <!-- Carga de Archivo -->
                 <div class="card">
                     <div class="card-header">
-                        <h3><i class="fas fa-file-upload"></i> Cargar Datos</h3>
+                        <h3><i class="fas fa-file-upload"></i> Cargar y Gestionar</h3>
                     </div>
                     <div class="card-body">
                         <div class="file-upload-area">
@@ -38,16 +35,18 @@
                             </label>
                             <div id="file-info" class="file-info"></div>
                         </div>
+                        <hr class="card-divider">
+                        <button id="btn-clear-storage" class="btn btn-warning btn-full-width">
+                            <i class="fas fa-eraser"></i> Limpiar datos de envío
+                        </button>
                     </div>
                 </div>
 
-                <!-- Filtros -->
                 <div class="card">
                     <div class="card-header">
                         <h3><i class="fas fa-filter"></i> Filtros</h3>
                     </div>
                     <div class="card-body">
-                        <!-- Búsqueda de Voluntario -->
                         <div class="form-group">
                             <label for="volunteer-filter">
                                 <i class="fas fa-user"></i> Voluntario
@@ -65,8 +64,6 @@
                             </div>
                             <div id="volunteer-suggestions" class="suggestions-box"></div>
                         </div>
-
-                        <!-- Selector de Mes -->
                         <div class="form-group">
                             <label for="month-filter">
                                 <i class="fas fa-calendar"></i> Período
@@ -75,8 +72,6 @@
                                 <option value="">Todos los meses</option>
                             </select>
                         </div>
-
-                        <!-- Botones de Acción -->
                         <div class="action-buttons">
                             <button id="btn-apply-filters" class="btn btn-primary">
                                 <i class="fas fa-search"></i> Aplicar Filtros
@@ -88,7 +83,6 @@
                     </div>
                 </div>
 
-                <!-- Estadísticas Rápidas -->
                 <div class="card">
                     <div class="card-header">
                         <h3><i class="fas fa-chart-pie"></i> Resumen</h3>
@@ -108,7 +102,6 @@
                 </div>
             </section>
 
-            <!-- Panel de Resultados -->
             <section class="results-panel">
                 <div class="card">
                     <div class="card-header">
@@ -125,13 +118,12 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <!-- Tabla de Resultados -->
                         <div id="table-container" class="table-container">
                             <table id="results-table" class="data-table">
                                 <thead>
                                     <tr>
                                         <th>Fecha</th>
-                                        <th>Voluntario</th>
+                                        <th>Voluntario (según Excel)</th>
                                         <th>N° Vale</th>
                                         <th>Depósito</th>
                                         <th>Ordinaria</th>
@@ -142,12 +134,9 @@
                                     </tr>
                                 </thead>
                                 <tbody id="table-body">
-                                    <!-- Contenido dinámico -->
                                 </tbody>
                             </table>
                         </div>
-
-                        <!-- Mensaje cuando no hay datos -->
                         <div id="no-data" class="no-data-message" style="display: block;">
                             <i class="fas fa-inbox fa-3x"></i>
                             <p>No hay datos para mostrar</p>
@@ -159,7 +148,6 @@
         </main>
     </div>
 
-    <!-- Modal para Vista Previa de Vale -->
     <div id="vale-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -185,7 +173,6 @@
         </div>
     </div>
 
-    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="app.js"></script>
