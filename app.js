@@ -422,7 +422,7 @@ handleEmailVale() {
   }
   
   emailAction();
-}}
+}
 
 // Función para determinar el concepto de pago
 getPaymentConcept(transaction) {
