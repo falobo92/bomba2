@@ -408,7 +408,8 @@ handleEmailVale() {
   const body = encodeURIComponent(this.createEmailBody(transaction, paymentConcept, currentDate));
   
   const emailAction = () => {
-    window.location.href = `mailto:${transaction.email === 'correo@reemplazame.cl' ? '' : transaction.email}?subject=${subject}&body=${body}`;
+     const mailtoLink = `mailto:${transaction.email === 'correo@reemplazame.cl' ? '' : transaction.email}?subject=${subject}&body=${body}`;
+    window.open(mailtoLink, '_blank');
     alert("Se abrirá su cliente de correo. No olvide adjuntar el PDF descargado.");
     this.sentVales.add(transaction.id);
     this.updateSentValesStorage();
@@ -421,7 +422,7 @@ handleEmailVale() {
   }
   
   emailAction();
-}
+}}
 
 // Función para determinar el concepto de pago
 getPaymentConcept(transaction) {
