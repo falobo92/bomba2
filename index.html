@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Tesorería - Segunda Compañía</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header Principal -->
+        <header class="main-header">
+            <div class="header-wrapper">
+                <img src="escudo-original.png" alt="Segunda Compañía" class="header-logo">
+                <div class="header-info">
+                    <h1>Sistema de Tesorería</h1>
+                    <h2>Segunda Compañía de Bomberos</h2>
+                </div>
+            </div>
+        </header>
+
+        <!-- Contenido Principal -->
+        <main class="main-content">
+            <!-- Panel de Control -->
+            <section class="control-panel">
+                <!-- Carga de Archivo -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-file-upload"></i> Cargar Datos</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="file-upload-area">
+                            <input type="file" id="file-input" accept=".xlsx,.xls,.xlsm,.xlsb" hidden>
+                            <label for="file-input" class="upload-button">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Seleccionar archivo Excel</span>
+                            </label>
+                            <div id="file-info" class="file-info"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-filter"></i> Filtros</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Búsqueda de Voluntario -->
+                        <div class="form-group">
+                            <label for="volunteer-filter">
+                                <i class="fas fa-user"></i> Voluntario
+                            </label>
+                            <div class="input-with-clear">
+                                <input 
+                                    type="text" 
+                                    id="volunteer-filter" 
+                                    class="form-control"
+                                    placeholder="Buscar por nombre..."
+                                    autocomplete="off">
+                                <button id="clear-volunteer" class="btn-clear" type="button">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div id="volunteer-suggestions" class="suggestions-box"></div>
+                        </div>
+
+                        <!-- Selector de Mes -->
+                        <div class="form-group">
+                            <label for="month-filter">
+                                <i class="fas fa-calendar"></i> Período
+                            </label>
+                            <select id="month-filter" class="form-control">
+                                <option value="">Todos los meses</option>
+                            </select>
+                        </div>
+
+                        <!-- Botones de Acción -->
+                        <div class="action-buttons">
+                            <button id="btn-apply-filters" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Aplicar Filtros
+                            </button>
+                            <button id="btn-clear-filters" class="btn btn-secondary">
+                                <i class="fas fa-redo"></i> Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estadísticas Rápidas -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-pie"></i> Resumen</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="stats-container" class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value">0</div>
+                                <div class="stat-label">Transacciones</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">$0</div>
+                                <div class="stat-label">Total</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Panel de Resultados -->
+            <section class="results-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 id="results-title">
+                            <i class="fas fa-table"></i> Movimientos
+                        </h3>
+                        <div class="header-actions">
+                            <button id="btn-export" class="btn btn-success btn-sm">
+                                <i class="fas fa-file-excel"></i> Exportar
+                            </button>
+                            <button id="btn-print" class="btn btn-info btn-sm">
+                                <i class="fas fa-print"></i> Imprimir
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Tabla de Resultados -->
+                        <div id="table-container" class="table-container">
+                            <table id="results-table" class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Voluntario</th>
+                                        <th>N° Vale</th>
+                                        <th>Depósito</th>
+                                        <th>Ordinaria</th>
+                                        <th>Extraordinaria</th>
+                                        <th>Otros</th>
+                                        <th>Detalle</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-body">
+                                    <!-- Contenido dinámico -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Mensaje cuando no hay datos -->
+                        <div id="no-data" class="no-data-message" style="display: block;">
+                            <i class="fas fa-inbox fa-3x"></i>
+                            <p>No hay datos para mostrar</p>
+                            <small>Carga un archivo Excel o ajusta los filtros</small>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal para Vista Previa de Vale -->
+    <div id="vale-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Vista Previa del Vale</h3>
+                <button class="modal-close" onclick="closeValeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <iframe id="vale-preview" class="vale-preview"></iframe>
+            </div>
+            <div class="modal-footer">
+                 <button id="btn-email-vale" class="btn btn-info">
+                    <i class="fas fa-envelope"></i> Enviar por Email
+                </button>
+                <button id="btn-download-vale" class="btn btn-primary">
+                    <i class="fas fa-download"></i> Descargar PDF
+                </button>
+                <button class="btn btn-secondary" onclick="closeValeModal()">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
