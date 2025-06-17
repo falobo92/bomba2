@@ -1,51 +1,129 @@
-// ========== Sistema de Tesorería - Segunda Compañía ==========
-
 class TreasurySystem {
   constructor() {
-    // Datos de la aplicación
-    this.transactions = []; // Lista completa de todas las transacciones
-    this.displayedTransactions = []; // Lista que se muestra en pantalla (filtrada y ordenada)
-    this.volunteers = new Map();
-    this.volunteerContacts = new Map(); // Mapa de: NOMBRE_NORMALIZADO -> email@correo.com
-
-    // Nombres Maestros para agrupar diferentes formas de escribir un nombre.
+    this.transactions = [];
+    this.displayedTransactions = [];
+    this.volunteerData = new Map();
+    this.sentVales = new Set();
     this.nameAliases = new Map([
-      ['FELIPE SOTO', ['FELIPE ANDRES SOTO VAS', 'CRISTIAN FELIPE JEREZ SOTO', 'JEREZ SOTO CRISTIAN FE', 'JEREZ SOTO CRISTIAN FELIPE', 'FELIPE SOTO', 'BARBARA CATALINA SOTO', 'SOTO VEGA B5RBARA CATA']],
+      ['FELIPE SOTO', ['FELIPE ANDRES SOTO VAS', 'FELIPE SOTO', 'ANDRES ALEJANDRO SOTO', 'FELIPE ANDRES SOTO SOTO', 'ANDRES ALEJANDRO SOTO NUNEZ']],
+      ['CRISTIAN JEREZ SOTO', ['CRISTIAN FELIPE JEREZ SOTO', 'JEREZ SOTO CRISTIAN FE', 'JEREZ SOTO CRISTIAN FELIPE']],
+      ['BARBARA SOTO', ['BARBARA CATALINA SOTO', 'SOTO VEGA B5RBARA CATA', 'SOTO VEGA B5RBARA CATALINA']],
       ['DIEGO ACUÑA', ['DIEGO ANDRES ACUÑA', 'DIEGO ANDRES ACU?NTILD', 'DIEGO ACUNA', 'DIEGO ANDRES ACUNA']],
       ['ISRAEL VALDES', ['ISRAEL VALDES', 'ISRAEL VALDES LARA']],
-      ['PAMELA TAPIA', ['PAMELA ANDREA TAPIA R', 'PAMELA ANDREA TAPIA']],
+      ['PAMELA TAPIA', ['PAMELA ANDREA TAPIA R', 'PAMELA ANDREA TAPIA', 'PAMELA ANDREA TAPIA RETAMAL']],
       ['SIMON CASTILLO', ['CASTILLO PEREDA SIMON', 'SIMON CASTILLO PEREDA']],
-      ['FELIPE OLGUIN', ['FELIPE ANDRES OLGUIN B', 'FELIPE ANDRES OLGUIN BAEZA']]
+      ['FELIPE OLGUIN', ['FELIPE ANDRES OLGUIN B', 'FELIPE ANDRES OLGUIN BAEZA']],
+      ['FELIPE VALDERRAMA', ['FELIPE EDUARDO VALDERR', 'FELIPE EDUARDO VALDERRAMA S']],
+      ['DOMINIQUE SAAVEDRA', ['DOMINIQUE PAOLA SAAVED']],
+      ['JAVIERA INNOCENTI', ['JAVIERA FRANCISCA INNO']],
+      ['THALIS FREITAS', ['THALIS STEFANE FREITAS']],
+      ['VICENTE ROMO', ['ROMO FIGUEROA ANDRES E', 'ROMO PARDO VICENTE ANDRES']],
+      ['EDUARDO LAZCANO', ['LAZCANO SALDIAS EDUARD', 'LAZCANO SALDIAS EDUARDO IGN']],
+      ['CAMILA MUNOZ', ['CAMILA FERNANDA MUNOZ', 'CAMILA FERNANDA MUNOZ ALVIN']],
+      ['SEBASTIAN MENA', ['SEBASTIAN IGNACIO MENA', 'SEBASTIAN IGNACIO MENA IGOR']],
+      ['JAVIER LOBO', ['JAVIER LOBO BORIC']],
+      ['ALVARO MONARES', ['MONARES GUAJARDO ALVAR', 'ALVARO JOSE MONARES GU', 'MONARES GUAJARDO ALVARO JOS']],
+      ['MARIA FERNANDA SEYLER', ['MARIA FERNANDA SEYLER']],
+      ['RICARDO LILLO', ['RICARDO FLAVIO LILLO', 'RICARDO FLAVIO LILLO GANTER']],
+      ['SILVIA BRAVO', ['SILVIA ISABEL BRAVO DI', 'SILVIA ISABEL BRAVO DIAZ']],
+      ['ISMAEL CARRENO', ['CARRENO URREJOLA ISMAE', 'CARRENO URREJOLA ISMAEL ALB']],
+      ['EMILIO MONJE', ['EMILIO GONZALO JORGE M', 'EMILIO MONJE']],
+      ['HUGO GUZMAN', ['HUGO GONZALO GUZMAN RA', 'HUGO GONZALO GUZMAN RAMBALDI']],
+      ['JEANNETTE TAPIA', ['JEANNETTE LILIAN TAPIA', 'TAPIA RETAMAL JEANNETT', 'JEANNETTE LILIAN TAPIA RETA']],
+      ['MANOLO VILLALTA', ['VILLALTA INOSTROZA MAN', 'VILLALTA INOSTROZA MANOLO A']],
+      ['ESTEBAN GASCON', ['ESTEBAN MARTIN GASCON', 'ESTEBAN MARTIN GASCON OSORI']],
+      ['CAMILO DIAZ', ['DIAZ PINTO CAMILO ANTO', 'DIAZ PINTO CAMILO ANTONIO']],
+      ['ESAU OTERO', ['ESAU ARIEL OTERO REYES']],
+      ['JONATHAN FAJARDO', ['FAJARDO VASQUEZ JONATH', 'FAJARDO VASQUEZ JONATHAN IS']],
+      ['ESTEBAN TRONCOSO', ['TRONCOSO VILCHES ESTEB', 'TRONCOSO VILCHES ESTEBAN AN', 'TRONCOSO VILCHES ESTEBAN ANDRES']],
+      ['MARCO SUBERCASEAUX', ['MARCO ALEJANDRO SUBERC']],
+      ['MATIAS BELTRAN', ['MATIAS SANTIAGO BELTRA']],
+      ['GASPAR MENDOZA', ['MENDOZA MAFFEI GASPAR']],
+      ['RODRIGO DIAZ', ['RODRIGO ANDRES DIAZ ME']],
+      ['CATALINA SILVA', ['CATALINA ANDREA SILVA', 'CATALINA ANDREA SILVA CAMPO']],
+      ['RICARDO GONZALEZ', ['RICARDO DANIEL GONZALE']],
+      ['MAXIMILIANO CONTRERAS', ['MAXIMILIANO ALBERTO CO']],
+      ['MARIO TORREJON', ['MARIO EDGARDO TORREJON', 'MARIO EDGARDO TORREJON VALE', 'MARIO EDGARDO TORREJON VALENZUELA']],
+      ['ALVARO LUCERO', ['ALVARO ANTONIO LUCERO', 'LUCERO TOLEDO ALVARO ANTONI']],
+      ['MIGUEL HERNANDEZ', ['MIGUEL IGNACIO HERNAND']],
+      ['EDUARDO GALVEZ', ['EDUARDO ENIQUE GALVEZ', 'EDUARDO ENRIQUE GALVEZ', 'FELIPE EDUARDO GALVEZ YUTRO']],
+      ['GASTON SANDOVAL', ['GASTON NELSON SANDOVAL', 'GASTON NELSON SANDOVAL JARA']],
+      ['JORGE MIGUELES', ['JORGE ALEXIS MIGUELES', 'JORGE ALEXIS MIGUELES REBOLLEDO', 'JORGE ALEXIS MIGUELES REBOL']],
+      ['CLAUDIO BERNAL', ['CLAUDIO ANTONIO BERNAL', 'BERNAL MENA CLAUDIO ANTONIO', 'BERNAL MENA CLAUDIO AN']],
+      ['VICENTE MEZA', ['MEZA SEPULVEDA VICENTE', 'MEZA SEPULVEDA VICENTE ALBERTO']],
+      ['CHRISTIAN GROB', ['CHRISTIAN GROB HERNAND', 'CHRISTIAN GROB HERNANDEZ']],
+      ['HECTOR MIRANDA', ['HECTOR IGNACIO MIRANDA', 'HECTOR IGNACIO MIRANDA ZALA', 'HECTOR IGNACIO MIRANDA ZALAQUETT']],
+      ['FELIPE MILLAN', ['FELIPE ALEJANDRO MILLA', 'FELIPE ALEJANDRO MILLAN VID']],
+      ['MATIAS CARRASCO', ['MATIAS NICOLAS CARRASC', 'MATIAS NICOLAS CARRASCO ORT', 'MATIAS NICOLAS CARRASCO ORTEGA']],
+      ['VALENTINA GYLLEN', ['VALENTINA PAZ GYLLEN M', 'VALENTINA GYLLEN', 'VALENTINA PAZ GYLLEN MARTIN']],
+      ['SAIDA POLLAK', ['POLLAK DONOSO SAIDA ES']],
+      ['DANIEL MOLINA', ['DANIEL ESTEBAN MOLINA', 'DANIEL ESTEBAN MOLINA OSORIO']],
+      ['OSCAR VARGAS', ['VARGAS HOGER OSCAR MAN', 'VARGAS HOGER OSCAR MANUEL']],
+      ['ESTEBAN TEJO', ['ESTEBAN ALEJANDRO TEJO', 'ESTEBAN ALEJANDRO TEJO CAVALIERI']],
+      ['MARIA PAZ CAMPOS', ['MARIA PAZ CAMPOS VASQU', 'MARIA PAZ CAMPOS VASQUEZ']],
+      ['PATRICIO SOLIS', ['SOLIS DEL DESPOSITO PA', 'SOLIS DEL DESPOSITO PATRICI']],
+      ['MARIA JESUS VERNAL', ['MARIA JESUS VERNAL BRI', 'VERNAL BRITO MARIA JES', 'VERNAL BRITO MARIA JESUS', 'MARIA JESUS VERNAL BRITO']],
+      ['JOSE MIGUEL ABUDINEN', ['JOSE MIGUEL ABUDINEN B', 'JOSE MIGUEL ABUDINEN BUTTO']],
+      ['CRISTIAN MIRANDA', ['CRISTIAN ERNESTO MIRAN', 'CRISTIAN ERNESTO MIRANDA GALVEZ']],
+      ['HENRY ORTIZ', ['HENRY MARCIAL ORTIZ GR', 'HENRY MARCIAL ORTIZ GRANDON']],
+      ['SERGIO REYES', ['REYES ARAYA SERGIO ALE', 'REYES ARAYA SERGIO ALEJANDR']],
+      ['ALEXANDROS DZAZOPULOS', ['DZAZOPULOS ELGUETA ALE', 'DZAZOPULOS ELGUETA ALEXANDROS']],
+      ['RAIMUNDO CONCHA', ['RAIMUNDO ANTONIO CONCHA CORTI', 'RAIMUNDO ANTONIO CONCH', 'RAIMUNDO ANTONIO CONCHA COR']],
+      ['RODRIGO CASTRO', ['CASTRO GONZALEZ RODRIGO ANDRES']],
+      ['VICTOR AGUILERA', ['AGUILERA GRANA VICTOR EDUARDO']],
+      ['RAYMI UGAZ', ['UGAZ AYALA RAYMI ANDRES', 'RAYMI UGAZ AYALA', 'RAYMI UGAZ']],
+      ['ANDRES LEIVA', ['ANDRES FELIPE LEIVA PARDO']],
+      ['ESTEBAN VILCHES', ['TRONCOSO VILCHES ESTEBAN ANDRES', 'ESTEBAN IGNACIO VILCHES MAN']],
+      ['MARCELO DONOSO', ['DONOSO DIAZ MARCELO OCTAVIO', 'MARCELO DONOSO']],
+      ['CATALINA VALENZUELA', ['VALENZUELA MAUREIRA CATALINA VALESKA', 'VALENZUELA MAUREIRA CA']],
+      ['JULIO MORALES', ['JULIO MORALES']],
+      ['CRISTOBAL MORALES', ['CRISTOBAL ANDRES MORALES RAVEST', 'CRISTOBAL ANDRES MORALES RA', 'CRISTOBAL ANDRES MORAL']],
+      ['IGNACIO PACHECO', ['IGNACIO PACHECO LOPEZ']],
+      ['LILIANA PINTANEL', ['LILIANA DEL CARMEN PINTANEL', 'LILIANA DEL CARMEN PIN']],
+      ['GERMAN SALAZAR', ['GERMAN FEDERICO EUGE SALAZA']],
+      ['BRUNNO RETAMAL', ['BRUNNO ALEJANDRO RETAM']],
+      ['SERGIO ESCUDERO', ['SERGIO ALEJANDRO ESCUDERO C']],
+      ['FERNANDA TORO', ['FERNANDA TORO ESTAY']],
+      ['ANGEL OSSES', ['ANGEL FRANCISCO OSSES']],
+      ['BRUNO ALISTE', ['BRUNO ALISTE MONEY']],
     ]);
-
-    // Mapeo flexible de columnas para la importación de Excel.
-    this.columnMapping = {
-      date: ['FECHA', 'DATE'],
-      detail: ['DETALLE MOVIMIENTO', 'DETALLEMOVIMIENTO', 'DETALLE'],
-      valeNumber: ['N VALE', 'N_VALE', 'N° VALE', 'Nº VALE'],
-      deposit: ['DEPOSITO', 'DEPÓSITO', 'MONTO', 'TOTAL'],
-      ordinary: ['ORDINARIA', 'CUOTA ORDINARIA'],
-      extraordinary: ['EXTRAORDINARIA', 'CUOTA EXTRAORDINARIA'],
-      others: ['OTROS'],
-      note: ['NOTA', 'DETALLE OTROS'],
-      observation: ['OBSERVACION', 'OBSERVACIÓN'],
-    };
-
-    // Estado de la UI
+    this.columnMapping = { date: ['FECHA', 'DATE'], detail: ['DETALLE MOVIMIENTO', 'DETALLEMOVIMIENTO', 'DETALLE'], valeNumber: ['N VALE', 'N_VALE', 'N° VALE', 'Nº VALE'], deposit: ['DEPOSITO', 'DEPÓSITO', 'MONTO', 'TOTAL'], ordinary: ['ORDINARIA', 'CUOTA ORDINARIA'], extraordinary: ['EXTRAORDINARIA', 'CUOTA EXTRAORDINARIA'], others: ['OTROS'], note: ['NOTA', 'DETALLE OTROS'], observation: ['OBSERVACION', 'OBSERVACIÓN'] };
     this.images = { logo: null, signature: null };
     this.currentPdfDoc = null;
     this.currentTransactionForModal = null;
-
     this.init();
   }
 
   async init() {
+    this.loadSentValesFromStorage();
     await this.loadImages();
     this.setupEventListeners();
     await this.loadInitialData();
   }
 
-  // ========== 1. CARGA DE DATOS INICIALES ==========
+  loadSentValesFromStorage() {
+    try {
+      const sentValesData = localStorage.getItem('sentVales');
+      if (sentValesData) {
+        this.sentVales = new Set(JSON.parse(sentValesData));
+      }
+    } catch (error) {
+      this.sentVales = new Set();
+    }
+  }
+
+  updateSentValesStorage() {
+    localStorage.setItem('sentVales', JSON.stringify(Array.from(this.sentVales)));
+  }
+
+  clearSentVales() {
+    if (confirm("¿Está seguro de que desea borrar todos los registros de vales enviados? Esta acción no se puede deshacer.")) {
+      this.sentVales.clear();
+      localStorage.removeItem('sentVales');
+      this.showMessage("Registros de envío limpiados.", 'warning');
+      this.displayResults();
+    }
+  }
 
   async loadImages() {
     try {
@@ -61,37 +139,26 @@ class TreasurySystem {
   }
 
   async loadInitialData() {
-    // Carga de voluntarios es CRÍTICA. Sin ella, no se pueden asociar correos.
     try {
       const volResponse = await fetch('volunteers.json');
       if (!volResponse.ok) throw new Error('No se pudo encontrar `volunteers.json`.');
-
       const volunteersList = await volResponse.json();
       volunteersList.forEach(v => {
-        if (v.nombre && v.apellido && v.correo) {
-          const fullName = this.normalizeText(`${v.nombre} ${v.apellido}`);
-          this.volunteerContacts.set(fullName, v.correo);
+        if (v.nombre && v.apellido) {
+          const masterName = this.normalizeText(`${v.nombre} ${v.apellido}`);
+          this.volunteerData.set(masterName, {
+            email: v.correo || null,
+            nombre: v.nombre,
+            apellido: v.apellido,
+            officialName: this.formatNameToTitleCase(`${v.nombre} ${v.apellido}`)
+          });
         }
       });
-      console.log(`✓ ${this.volunteerContacts.size} contactos de voluntarios cargados.`);
       this.showMessage('Lista de voluntarios cargada. Listo para importar archivo Excel.', 'success');
-
     } catch (error) {
-      console.error('Error Crítico:', error);
-      this.showMessage('Error: No se pudo cargar `volunteers.json`. La aplicación no funcionará correctamente.', 'error');
-      return; // Detenemos la carga si los voluntarios no están.
+      this.showMessage('Error: No se pudo cargar `volunteers.json`. La aplicación no funcionará correctamente.', 'error', false);
     }
-
-    // Carga de transacciones de ejemplo (opcional)
-    try {
-      const transResponse = await fetch('transactions.json');
-      if (transResponse.ok) {
-        this.processTransactions(await transResponse.json());
-      }
-    } catch (error) { /* No hacer nada si no existe, es opcional */ }
   }
-
-  // ========== 2. PROCESAMIENTO DE DATOS (EXCEL O JSON) ==========
 
   async handleFileUpload(file) {
     if (!file) return;
@@ -101,8 +168,7 @@ class TreasurySystem {
       this.processTransactions(data, mappedHeaders);
       this.showMessage(`✓ Archivo cargado: ${this.transactions.length} transacciones procesadas.`, 'success');
     } catch (error) {
-      console.error('Error procesando archivo:', error);
-      this.showMessage(`Error: ${error.message}`, 'error');
+      this.showMessage(`Error: ${error.message}`, 'error', false);
     }
   }
 
@@ -112,26 +178,17 @@ class TreasurySystem {
       reader.onload = (e) => {
         try {
           const workbook = XLSX.read(e.target.result, { type: 'array', cellDates: true });
-          const sheetName = workbook.SheetNames.find(name =>
-            this.normalizeText(name).includes('DETALLE') || this.normalizeText(name).includes('MOVIMIENTO')
-          ) || workbook.SheetNames[0];
-
+          const sheetName = workbook.SheetNames.find(name => this.normalizeText(name).includes('DETALLE') || this.normalizeText(name).includes('MOVIMIENTO')) || workbook.SheetNames[0];
           if (!sheetName) return reject(new Error("No se encontró una hoja válida en el Excel."));
-
           const worksheet = workbook.Sheets[sheetName];
           const headers = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0];
           const mappedHeaders = {};
-
           for (const internalKey in this.columnMapping) {
             const possibleNames = this.columnMapping[internalKey];
             const foundHeader = headers.find(h => h && possibleNames.includes(this.normalizeText(h)));
             if (foundHeader) mappedHeaders[internalKey] = foundHeader;
           }
-
-          if (!mappedHeaders.detail || !mappedHeaders.deposit) {
-            return reject(new Error("Columnas 'Detalle' o 'Depósito' no encontradas. Verifique el archivo."));
-          }
-
+          if (!mappedHeaders.detail || !mappedHeaders.deposit) return reject(new Error("Columnas 'Detalle' o 'Depósito' no encontradas. Verifique el archivo."));
           const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false, defval: null });
           resolve({ data: jsonData, mappedHeaders });
         } catch (error) {
@@ -152,108 +209,96 @@ class TreasurySystem {
       }
       return undefined;
     };
-
     this.transactions = data
       .filter(row => getValue(row, 'detail') && getValue(row, 'deposit') !== undefined && getValue(row, 'deposit') !== null)
-      .map(row => this.normalizeTransaction(row, getValue));
-
-    this.applyFilters(); // Esto actualizará la vista
+      .map((row, index) => this.normalizeTransaction(row, getValue, index));
+    this.applyFilters();
   }
 
-  normalizeTransaction(row, getValue) {
+  normalizeTransaction(row, getValue, index) {
     const detail = String(getValue(row, 'detail') || '');
-    const cleanedName = this.extractName(detail);
-    const masterName = this.getMasterName(cleanedName);
-    const email = this.findEmailForVolunteer(masterName); // Búsqueda de email con el nombre maestro
+    const nameFromExcel = this.extractName(detail);
+    const masterName = this.getMasterName(nameFromExcel);
+    const volunteer = this.volunteerData.get(masterName);
     const date = this.parseDate(getValue(row, 'date'));
-    const note = [
-      getValue(row, 'note'),
-      getValue(row, 'observation')
-    ].filter(Boolean).join(' - ');
-
-    const parseAmount = (value) => {
-      if (typeof value === 'number') return value;
-      if (typeof value === 'string') return parseInt(value.replace(/[^0-9-]/g, '')) || 0;
-      return 0;
-    };
+    const deposit = this.parseAmount(getValue(row, 'deposit'));
+    const transactionId = `${this.formatDate(date)}-${masterName}-${deposit}-${index}`;
 
     return {
-      date, dateStr: this.formatDate(date),
-      detail, name: cleanedName, masterName, email: email || '',
+      id: transactionId,
+      date,
+      dateStr: this.formatDate(date),
+      detail,
+      nameFromExcel: nameFromExcel,
+      officialDisplayName: volunteer ? volunteer.officialName : nameFromExcel,
+      nombre: volunteer ? volunteer.nombre : '',
+      apellido: volunteer ? volunteer.apellido : '',
+      masterName: masterName,
+      email: volunteer ? volunteer.email || 'correo@reemplazame.cl' : 'correo@reemplazame.cl',
       valeNumber: getValue(row, 'valeNumber') || '',
-      deposit: parseAmount(getValue(row, 'deposit')),
-      ordinary: parseAmount(getValue(row, 'ordinary')),
-      extraordinary: parseAmount(getValue(row, 'extraordinary')),
-      others: parseAmount(getValue(row, 'others')),
-      note: note, // Asigna la nota combinada
-        observation:  getValue(row, 'observation') || '',
+      deposit: deposit,
+      ordinary: this.parseAmount(getValue(row, 'ordinary')),
+      extraordinary: this.parseAmount(getValue(row, 'extraordinary')),
+      others: this.parseAmount(getValue(row, 'others')),
+      note: [getValue(row, 'note'), getValue(row, 'observation')].filter(Boolean).join(' - '),
     };
   }
-
-  // ========== 3. LÓGICA DE UI Y FILTRADO ==========
 
   applyFilters() {
     const volunteerFilter = document.getElementById('volunteer-filter').value.trim();
     const monthFilter = document.getElementById('month-filter').value;
     let filtered = [...this.transactions];
-
     if (monthFilter) {
       const [year, month] = monthFilter.split('-');
-      // CORRECCIÓN: Se suma 1 a getMonth() para que coincida con el formato 1-12
       filtered = filtered.filter(t => t.date && !isNaN(t.date) && t.date.getFullYear() == year && (t.date.getMonth() + 1) == month);
     }
     if (volunteerFilter) {
       const normalizedFilter = this.normalizeText(volunteerFilter);
-      filtered = filtered.filter(t =>
-        this.normalizeText(t.name).includes(normalizedFilter) ||
-        this.normalizeText(t.masterName).includes(normalizedFilter)
-      );
+      filtered = filtered.filter(t => this.normalizeText(t.nameFromExcel).includes(normalizedFilter) || (t.masterName && this.normalizeText(t.masterName).includes(normalizedFilter)));
     }
-
     this.displayedTransactions = filtered.sort((a, b) => (b.date || 0) - (a.date || 0));
-
     this.updateFiltersUI();
     this.displayResults();
     this.updateStats();
   }
 
   displayResults() {
-    const transactions = this.displayedTransactions;
     const tbody = document.getElementById('table-body');
     const noDataDiv = document.getElementById('no-data');
     const tableContainer = document.getElementById('table-container');
 
-    if (!transactions || transactions.length === 0) {
+    if (!this.displayedTransactions || this.displayedTransactions.length === 0) {
       tbody.innerHTML = '';
       tableContainer.style.display = 'none';
       noDataDiv.style.display = 'block';
     } else {
       tableContainer.style.display = 'block';
       noDataDiv.style.display = 'none';
-      tbody.innerHTML = transactions.map((t, index) => `
-                <tr>
-                    <td>${t.dateStr}</td>
-                    <td>${t.name}</td>
-                    <td>${t.valeNumber || '-'}</td>
-                    <td>${this.formatCurrency(t.deposit)}</td>
-                    <td>${t.ordinary ? this.formatCurrency(t.ordinary) : '-'}</td>
-                    <td>${t.extraordinary ? this.formatCurrency(t.extraordinary) : '-'}</td>
-                    <td>${t.others ? this.formatCurrency(t.others) : '-'}</td>
-                    <td>${[t.note, t.observation].filter(Boolean).join(' - ') || '-'}</td>
-                    <td>
-                        <button class="btn-vale" onclick="treasury.generateVale(${index})">
-                            <i class="fas fa-file-pdf"></i> Ver Vale
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+      tbody.innerHTML = this.displayedTransactions.map((t, index) => {
+        const isSent = this.sentVales.has(t.id);
+        const sentClass = isSent ? 'sent' : '';
+        const buttonHtml = isSent
+          ? `<button class="btn-vale" disabled><i class="fas fa-check"></i> Enviado</button>`
+          : `<button class="btn-vale" onclick="treasury.generateVale(${index})"><i class="fas fa-file-pdf"></i> Ver Vale</button>`;
+        return `
+          <tr class="${sentClass}">
+              <td>${t.dateStr}</td>
+              <td>${t.nameFromExcel}</td>
+              <td>${t.valeNumber || '-'}</td>
+              <td>${this.formatCurrency(t.deposit)}</td>
+              <td>${t.ordinary ? this.formatCurrency(t.ordinary) : '-'}</td>
+              <td>${t.extraordinary ? this.formatCurrency(t.extraordinary) : '-'}</td>
+              <td>${t.others ? this.formatCurrency(t.others) : '-'}</td>
+              <td>${t.note || '-'}</td>
+              <td>${buttonHtml}</td>
+          </tr>`;
+      }).join('');
     }
   }
 
   updateStats() {
-    const transactions = this.displayedTransactions;
-    const total = transactions.reduce((sum, t) => sum + t.deposit, 0);
-    document.querySelector('.stat-item:nth-child(1) .stat-value').textContent = transactions.length.toLocaleString('es-CL');
+    const total = this.displayedTransactions.reduce((sum, t) => sum + t.deposit, 0);
+    document.querySelector('.stat-item:nth-child(1) .stat-value').textContent = this.displayedTransactions.length.toLocaleString('es-CL');
     document.querySelector('.stat-item:nth-child(2) .stat-value').textContent = this.formatCurrency(total);
   }
 
@@ -271,240 +316,255 @@ class TreasurySystem {
     monthSelect.innerHTML = '<option value="">Todos los meses</option>';
     Array.from(months.entries()).sort((a, b) => b[0].localeCompare(a[0])).forEach(([key, name]) => {
       const option = document.createElement('option');
-      option.value = key.replace(/-(\d)$/, '-0$1'); // Asegura dos dígitos en el mes
+      option.value = key;
       option.textContent = name;
       monthSelect.appendChild(option);
     });
     if (currentMonth) monthSelect.value = currentMonth;
   }
 
-  // ========== 4. ACCIONES (PDF, EMAIL, EXPORTAR) ==========
-
   async generateVale(index) {
     const t = this.displayedTransactions[index];
     if (!t) return;
-
     this.currentTransactionForModal = t;
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'letter');
     const PW = 215.9, PH = 279.4, M = 20;
 
-    // 1) Cabecera
     doc.setFillColor(240, 240, 240);
     doc.rect(0, 0, PW, 40, 'F');
     if (this.images.logo) {
-      doc.addImage(this.images.logo, 'PNG', M, 5, 30, 30);
+      const logoWidth = 25;
+      const aspectRatio = this.images.logo.height / this.images.logo.width;
+      const logoHeight = logoWidth * aspectRatio;
+      doc.addImage(this.images.logo, 'PNG', M, (40 - logoHeight) / 2, logoWidth, logoHeight);
     }
-    doc.setFontSize(18);
-    doc.setFont(undefined, 'bold');
-    doc.text('TESORERÍA – 2ª COMPAÑÍA', PW - M, 15, { align: 'right' });
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'normal');
-    doc.text('La Vida por la Humanidad', PW - M, 23, { align: 'right' });
+    doc.setFontSize(18); doc.setFont(undefined, 'bold'); doc.text('TESORERÍA – 2ª COMPAÑÍA', PW - M, 15, { align: 'right' });
+    doc.setFontSize(12); doc.setFont(undefined, 'normal'); doc.text('La Vida por la Humanidad', PW - M, 23, { align: 'right' });
 
-    // 2) Datos del comprobante
     const startY = 50;
     const labelX = M + 4, valueX = M + 50, lineH = 8;
     let y = startY + 10;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'bold'); doc.text('N° Vale:', labelX, y);
-    doc.setFont(undefined, 'normal'); doc.text(t.valeNumber || 'S/N', valueX, y);
-    y += lineH * 1.5;
-    doc.setFont(undefined, 'bold'); doc.text('Nombre:', labelX, y);
-    doc.setFont(undefined, 'normal'); doc.text(t.name, valueX, y, { maxWidth: PW - valueX - M });
-    y += lineH * 1.5;
-    doc.setFont(undefined, 'bold'); doc.text('Fecha:', labelX, y);
-    doc.setFont(undefined, 'normal'); doc.text(t.dateStr, valueX, y);
-    y += lineH * 1.5;
-    doc.setFont(undefined, 'bold'); doc.text('Detalle Otros:', labelX, y);
-    doc.setFont(undefined, 'normal');
-    doc.text(
-      [t.note, t.observation].filter(Boolean).join(' – ') || '-',
-      valueX, y, { maxWidth: PW - valueX - M }
-    );
-    doc.setLineWidth(0.2);
-    doc.rect(M, startY, PW - 2 * M, y - startY + 5);
 
-    // 3) Cuotas en mini-tabla
+    const pdfName = (t.apellido && t.nombre) ? `${t.apellido}, ${t.nombre}`.toUpperCase() : t.officialDisplayName.toUpperCase();
+
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold'); doc.text('N° Vale:', labelX, y); doc.setFont(undefined, 'normal'); doc.text(t.valeNumber || 'S/N', valueX, y);
+    y += lineH * 1.5; doc.setFont(undefined, 'bold'); doc.text('Nombre:', labelX, y); doc.setFont(undefined, 'normal'); doc.text(pdfName, valueX, y, { maxWidth: PW - valueX - M });
+    y += lineH * 1.5; doc.setFont(undefined, 'bold'); doc.text('Fecha:', labelX, y); doc.setFont(undefined, 'normal'); doc.text(t.dateStr, valueX, y);
+    y += lineH * 1.5; doc.setFont(undefined, 'bold'); doc.text('Detalle Otros:', labelX, y); doc.setFont(undefined, 'normal'); doc.text(t.note || '-', valueX, y, { maxWidth: PW - valueX - M });
+    doc.setLineWidth(0.2); doc.rect(M, startY, PW - 2 * M, y - startY + 5);
+
     const tableY = y + 10;
     const colW = (PW - 2 * M) / 3;
     doc.setFontSize(10);
     ['Ordinaria', 'Extraordinaria', 'Otros'].forEach((hdr, i) => {
       const x = M + i * colW;
       doc.rect(x, tableY, colW, 20);
-      doc.setFont(undefined, 'bold');
-      doc.text(hdr, x + colW / 2, tableY + 6, { align: 'center' });
-      doc.setFont(undefined, 'normal');
-      const val = [t.ordinary, t.extraordinary, t.others][i];
+      doc.setFont(undefined, 'bold'); doc.text(hdr, x + colW / 2, tableY + 6, { align: 'center' });
+      doc.setFont(undefined, 'normal'); const val = [t.ordinary, t.extraordinary, t.others][i];
       doc.text(this.formatCurrency(val), x + colW / 2, tableY + 14, { align: 'center' });
     });
 
-    // 4) Total destacado
     const totalY = tableY + 25;
-    doc.setFillColor(230, 230, 250);
-    doc.rect(M, totalY, PW - 2 * M, 15, 'F');
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
-    doc.text('TOTAL:', M + 10, totalY + 10);
-    doc.text(this.formatCurrency(t.deposit), PW - M - 10, totalY + 10, { align: 'right' });
+    doc.setFillColor(230, 230, 250); doc.rect(M, totalY, PW - 2 * M, 15, 'F');
+    doc.setFontSize(14); doc.setFont(undefined, 'bold');
+    doc.text('TOTAL:', M + 10, totalY + 10); doc.text(this.formatCurrency(t.deposit), PW - M - 10, totalY + 10, { align: 'right' });
 
-    // 5) Firma y pie
     const signY = PH - 65;
     if (this.images.signature) {
       const ratio = this.images.signature.height / this.images.signature.width;
-      const sigWidth = 50;
-      const sigHeight = sigWidth * ratio;
+      const sigWidth = 50; const sigHeight = sigWidth * ratio;
       doc.addImage(this.images.signature, 'PNG', M + 10, signY, sigWidth, sigHeight);
     }
-    doc.setLineWidth(0.3);
-    doc.line(M + 10, signY + 30, M + 70, signY + 30);
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
-    doc.text('Tesorero', M + 40, signY + 36, { align: 'center' });
-
-    const now = new Date();
-    const footer = `Emitido: ${now.toLocaleString('es-CL')}`;
-    doc.setFontSize(8);
-    doc.text(footer, PW / 2, PH - 10, { align: 'center' });
-
+    doc.setLineWidth(0.3); doc.line(M + 10, signY + 30, M + 70, signY + 30);
+    doc.setFontSize(11); doc.setFont(undefined, 'normal'); doc.text('Tesorero', M + 40, signY + 36, { align: 'center' });
+    const now = new Date(); const footer = `Emitido: ${now.toLocaleString('es-CL')}`;
+    doc.setFontSize(8); doc.text(footer, PW / 2, PH - 10, { align: 'center' });
     this.currentPdfDoc = doc;
     document.getElementById('vale-preview').src = doc.output('datauristring');
     document.getElementById('vale-modal').classList.add('show');
   }
 
-  handleEmailVale() {
-    const transaction = this.currentTransactionForModal;
-    if (!transaction) return;
-    if (!transaction.email) {
-      alert("No se encontró un correo para este voluntario. Por favor, descargue el PDF y envíelo manualmente.");
-      return;
+handleEmailVale() {
+  const transaction = this.currentTransactionForModal;
+  if (!transaction) return;
+  
+  this.downloadCurrentPdf();
+  
+  // Determinar el concepto de pago con mejor lógica
+  let paymentConcept = this.getPaymentConcept(transaction);
+  
+  // Crear fecha actual formateada
+  const currentDate = new Date().toLocaleDateString('es-CL', {
+    day: '2-digit',
+    month: '2-digit', 
+    year: 'numeric'
+  });
+  
+  const subject = encodeURIComponent(`Comprobante de ${paymentConcept} - Segunda Compañía`);
+  
+  // Crear el cuerpo del correo mejorado
+  const body = encodeURIComponent(this.createEmailBody(transaction, paymentConcept, currentDate));
+  
+  const emailAction = () => {
+    window.location.href = `mailto:${transaction.email === 'correo@reemplazame.cl' ? '' : transaction.email}?subject=${subject}&body=${body}`;
+    alert("Se abrirá su cliente de correo. No olvide adjuntar el PDF descargado.");
+    this.sentVales.add(transaction.id);
+    this.updateSentValesStorage();
+    closeValeModal();
+    this.displayResults();
+  };
+  
+  if (transaction.email === 'correo@reemplazame.cl') {
+    alert("No se encontró un correo para este voluntario. Se abrirá el cliente de correo para que ingrese la dirección manualmente.");
+  }
+  
+  emailAction();
+}
+
+// Función para determinar el concepto de pago
+getPaymentConcept(transaction) {
+  const hasOrdinary = transaction.ordinary > 0;
+  const hasExtraordinary = transaction.extraordinary > 0;
+  const hasOthers = transaction.others > 0;
+  
+  // Múltiples conceptos
+  if ((hasOrdinary && hasExtraordinary) || (hasOrdinary && hasOthers) || (hasExtraordinary && hasOthers) || (hasOrdinary && hasExtraordinary && hasOthers)) {
+    return 'Abono Múltiple';
+  }
+  
+  // Conceptos únicos
+  if (hasOrdinary && !hasExtraordinary && !hasOthers) {
+    return 'Cuota Ordinaria';
+  }
+  
+  if (hasExtraordinary && !hasOrdinary && !hasOthers) {
+    return 'Cuota Extraordinaria';
+  }
+  
+  if (hasOthers && !hasOrdinary && !hasExtraordinary) {
+    return 'Otros Conceptos';
+  }
+  
+  // Fallback
+  return 'Abono/Pago';
+}
+
+// Función para crear el cuerpo del correo
+createEmailBody(transaction, paymentConcept, currentDate) {
+  let detalles = `• Concepto: ${paymentConcept}\n• Fecha: ${transaction.dateStr}\n• Monto: ${this.formatCurrency(transaction.deposit)}`;
+  
+  // Agregar observaciones si existen
+  if (transaction.note && transaction.note.trim() !== '') {
+    detalles += `\n• Observaciones: ${transaction.note}`;
+  }
+  
+  // Agregar desglose si hay múltiples conceptos
+  if (paymentConcept === 'Abono Múltiple') {
+    detalles += '\n\nDESGLOSE:';
+    if (transaction.ordinary > 0) {
+      detalles += `\n• Cuota Ordinaria: ${this.formatCurrency(transaction.ordinary)}`;
     }
-    this.downloadCurrentPdf();
-    const subject = encodeURIComponent("Comprobante de Pago - Segunda Compañía");
-    const body = encodeURIComponent(
-      `Estimado(a) ${transaction.name},
+    if (transaction.extraordinary > 0) {
+      detalles += `\n• Cuota Extraordinaria: ${this.formatCurrency(transaction.extraordinary)}`;
+    }
+    if (transaction.others > 0) {
+      detalles += `\n• Otros Conceptos: ${this.formatCurrency(transaction.others)}`;
+    }
+  }
+  
+  return `Estimado(a) ${transaction.officialDisplayName},
 
-Se adjunta el comprobante de pago.
-- Fecha: ${transaction.dateStr}
-- Monto: ${this.formatCurrency(transaction.deposit)}
-- Detalle: ${transaction.note || transaction.observation || 'Sin Detalle'}
+Hemos registrado exitosamente su pago.
 
-Por favor, adjunte el PDF recién descargado.
+DETALLES DEL PAGO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${detalles}
+
+Se adjunta el comprobante oficial en formato PDF.
+
+Si tiene alguna consulta, no dude en contactarnos.
 
 Saludos cordiales,
-Tesorero`);
-    window.location.href = `mailto:${transaction.email}?subject=${subject}&body=${body}`;
-    alert("Se abrirá su cliente de correo. No olvide adjuntar el PDF descargado.");
-  }
+Tesorería - Segunda Compañía de Bomberos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Este comprobante fue generado el ${currentDate}`;
+}
 
   downloadCurrentPdf() {
     if (!this.currentPdfDoc || !this.currentTransactionForModal) return;
-    const { name } = this.currentTransactionForModal;
+    const { officialDisplayName } = this.currentTransactionForModal;
     const date = new Date().toISOString().split('T')[0];
-    this.currentPdfDoc.save(`Vale_${name.replace(/\s/g, '_')}_${date}.pdf`);
+    this.currentPdfDoc.save(`Vale_${officialDisplayName.replace(/\s/g, '_')}_${date}.pdf`);
   }
 
   exportToExcel() {
-    const transactions = this.displayedTransactions;
-    if (transactions.length === 0) {
-      this.showMessage('No hay datos para exportar', 'error'); return;
+    if (this.displayedTransactions.length === 0) {
+      this.showMessage('No hay datos para exportar.', 'error', false);
+      return;
     }
+    const dataToExport = this.displayedTransactions.map(t => ({
+      'Fecha': t.dateStr,
+      'Voluntario (Excel)': t.nameFromExcel,
+      'Voluntario (Oficial)': t.officialDisplayName,
+      'N° Vale': t.valeNumber,
+      'Depósito': t.deposit,
+      'Cuota Ordinaria': t.ordinary,
+      'Cuota Extraordinaria': t.extraordinary,
+      'Otros': t.others,
+      'Detalle/Nota': t.note,
+      'Email': t.email,
+      'Enviado': this.sentVales.has(t.id) ? 'Sí' : 'No'
+    }));
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
     const wb = XLSX.utils.book_new();
-    // ... (código de exportación sin cambios) ...
+    XLSX.utils.book_append_sheet(wb, ws, "Reporte");
     XLSX.writeFile(wb, `Reporte_Tesoreria_${new Date().toISOString().split('T')[0]}.xlsx`);
   }
 
-  // ========== 5. HELPERS Y EVENT LISTENERS ==========
-
-  normalizeText(text) {
-    if (!text) return '';
-    return text.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+  parseAmount(value) {
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') return parseInt(value.replace(/[^0-9-]/g, '')) || 0;
+    return 0;
   }
 
-  extractName(detail) {
-    if (!detail) return 'SIN NOMBRE';
-    let name = detail.replace(/ACU\?NTILD/gi, 'ACUÑA').replace(/\?NTILD/gi, 'Ñ').replace(/\?A/g, 'Ñ');
-    name = name.replace(/^(TRASPASO|TRANSFERENCIA|DEPOSITO|PAGO)\sDE:/i, '').replace(/^Traspaso De:\s/i, '').trim();
-    return name.split(' ').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-  }
+  normalizeText(text) { if (!text) return ''; return text.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9\s]/g, '').replace(/\s+/g, ' ').trim(); }
 
-  getMasterName(name) {
-    const normalizedName = this.normalizeText(name);
-    for (const [master, aliases] of this.nameAliases) {
-      if (aliases.some(alias => this.normalizeText(alias) === normalizedName)) return master;
-    }
-    return normalizedName;
-  }
+  extractName(detail) { if (!detail) return 'SIN NOMBRE'; let name = detail.replace(/ACU\?NTILD/gi, 'ACUÑA').replace(/\?NTILD/gi, 'Ñ').replace(/\?A/g, 'Ñ'); name = name.replace(/^(TRASPASO|TRANSFERENCIA|DEPOSITO|PAGO)\s*DE:?\s*/i, '').trim(); return this.formatNameToTitleCase(name); }
 
-  findEmailForVolunteer(masterName) {
-    const normalizedMasterName = this.normalizeText(masterName);
-    return this.volunteerContacts.get(normalizedMasterName) || null;
-  }
+  getMasterName(name) { const normalizedName = this.normalizeText(name); for (const [master, aliases] of this.nameAliases.entries()) { if (aliases.some(alias => this.normalizeText(alias) === normalizedName)) { return master; } } if (this.volunteerData.has(normalizedName)) { return normalizedName; } for (const masterKey of this.volunteerData.keys()) { if (masterKey.startsWith(normalizedName) || normalizedName.startsWith(masterKey)) { return masterKey; } } return normalizedName; }
 
-  parseDate(dateValue) {
-    if (!dateValue) return null;
-    if (dateValue instanceof Date) return dateValue;
-    if (typeof dateValue === 'number') {
-      return new Date(Math.round((dateValue - 25569) * 86400 * 1000));
-    }
-    if (typeof dateValue === 'string') {
-      const partsDMY = dateValue.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
-      if (partsDMY) return new Date(partsDMY[3], partsDMY[2] - 1, partsDMY[1]);
-    }
-    return null;
-  }
+  parseDate(dateValue) { if (!dateValue) return null; if (dateValue instanceof Date) return dateValue; if (typeof dateValue === 'number') { return new Date(Math.round((dateValue - 25569) * 86400 * 1000)); } if (typeof dateValue === 'string') { const partsDMY = dateValue.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/); if (partsDMY) return new Date(partsDMY[3], partsDMY[2] - 1, partsDMY[1]); } return null; }
 
-  formatDate(date) {
-    if (!date || !(date instanceof Date) || isNaN(date)) return 'Fecha inválida';
-    return date.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  }
+  formatDate(date) { if (!date || !(date instanceof Date) || isNaN(date)) return 'Fecha inválida'; return date.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
 
-  formatCurrency(amount) {
-    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(amount || 0);
-  }
+  formatCurrency(amount) { return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(amount || 0); }
 
-  showMessage(message, type = 'info') {
-    const fileInfo = document.getElementById('file-info');
-    fileInfo.textContent = message;
-    fileInfo.className = `file-info ${type}`;
-    fileInfo.style.display = 'block';
-    if (type !== 'error') {
-      setTimeout(() => { if (fileInfo.textContent === message) fileInfo.style.display = 'none'; }, 5000);
-    }
-  }
+  formatNameToTitleCase(name) { if (!name) return ''; return name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' '); }
+
+  showMessage(message, type = 'info', autoHide = true) { const fileInfo = document.getElementById('file-info'); fileInfo.textContent = message; fileInfo.className = `file-info ${type}`; fileInfo.style.display = 'block'; if (autoHide) { setTimeout(() => { if (fileInfo.textContent === message) fileInfo.style.display = 'none'; }, 5000); } }
 
   setupEventListeners() {
-    document.getElementById('file-input').addEventListener('change', (e) => {
-      if (e.target.files[0]) this.handleFileUpload(e.target.files[0]);
-      e.target.value = null;
-    });
+    document.getElementById('file-input').addEventListener('change', (e) => { if (e.target.files[0]) this.handleFileUpload(e.target.files[0]); e.target.value = null; });
     document.getElementById('btn-apply-filters').addEventListener('click', () => this.applyFilters());
-    document.getElementById('btn-clear-filters').addEventListener('click', () => {
-      document.getElementById('volunteer-filter').value = '';
-      document.getElementById('month-filter').value = '';
-      this.applyFilters();
-    });
-    document.getElementById('clear-volunteer').addEventListener('click', () => {
-      document.getElementById('volunteer-filter').value = '';
-      document.getElementById('volunteer-suggestions').classList.remove('show');
-    });
+    document.getElementById('btn-clear-filters').addEventListener('click', () => { document.getElementById('volunteer-filter').value = ''; document.getElementById('month-filter').value = ''; this.applyFilters(); });
+    document.getElementById('clear-volunteer').addEventListener('click', () => { document.getElementById('volunteer-filter').value = ''; document.getElementById('volunteer-suggestions').classList.remove('show'); });
     document.getElementById('btn-export').addEventListener('click', () => this.exportToExcel());
     document.getElementById('btn-print').addEventListener('click', () => window.print());
     document.getElementById('btn-download-vale').addEventListener('click', () => this.downloadCurrentPdf());
     document.getElementById('btn-email-vale').addEventListener('click', () => this.handleEmailVale());
-
+    document.getElementById('btn-clear-storage').addEventListener('click', () => this.clearSentVales());
     const modal = document.getElementById('vale-modal');
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal || e.target.closest('.modal-close')) closeValeModal();
-    });
-
+    modal.addEventListener('click', (e) => { if (e.target === modal || e.target.closest('.modal-close')) closeValeModal(); });
     const input = document.getElementById('volunteer-filter');
     const suggestionsBox = document.getElementById('volunteer-suggestions');
     input.addEventListener('input', () => {
       const query = input.value.toLowerCase().trim();
       suggestionsBox.innerHTML = '';
       if (query.length < 2) { suggestionsBox.classList.remove('show'); return; }
-      const uniqueNames = [...new Set(this.transactions.map(t => t.name).filter(Boolean))];
+      const uniqueNames = [...new Set(this.transactions.map(t => t.nameFromExcel).filter(Boolean))];
       const matches = uniqueNames.filter(name => name.toLowerCase().includes(query)).slice(0, 10);
       if (matches.length > 0) {
         suggestionsBox.innerHTML = matches.map(name => `<div class="suggestion-item" data-name="${name}">${name}</div>`).join('');
@@ -513,22 +573,16 @@ Tesorero`);
         suggestionsBox.classList.remove('show');
       }
     });
-    suggestionsBox.addEventListener('click', (e) => {
-      if (e.target.classList.contains('suggestion-item')) {
-        input.value = e.target.dataset.name;
-        suggestionsBox.classList.remove('show');
-      }
-    });
-    document.addEventListener('click', (e) => {
-      if (!input.contains(e.target) && !suggestionsBox.contains(e.target)) {
-        suggestionsBox.classList.remove('show');
-      }
-    });
+    suggestionsBox.addEventListener('click', (e) => { if (e.target.classList.contains('suggestion-item')) { input.value = e.target.dataset.name; suggestionsBox.classList.remove('show'); } });
+    document.addEventListener('click', (e) => { if (!input.contains(e.target) && !suggestionsBox.contains(e.target)) { suggestionsBox.classList.remove('show'); } });
   }
 }
 
 function closeValeModal() {
   document.getElementById('vale-modal').classList.remove('show');
+  if (treasury) {
+    treasury.currentTransactionForModal = null;
+  }
 }
 
 let treasury;
