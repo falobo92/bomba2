@@ -1,0 +1,2 @@
+echo "" > .nojekyll
+git add .nojekyll && git commit -m "fix: skip jekyll" && git push
