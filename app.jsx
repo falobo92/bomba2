@@ -1,5 +1,17 @@
 const { useState, useEffect, useRef } = React;
 
+const columnMapping = {
+  date: ['FECHA', 'DATE'],
+  detail: ['DETALLE MOVIMIENTO', 'DETALLEMOVIMIENTO', 'DETALLE'],
+  valeNumber: ['N VALE', 'N_VALE', 'N° VALE', 'Nº VALE'],
+  deposit: ['DEPOSITO', 'DEPÓSITO', 'MONTO', 'TOTAL'],
+  ordinary: ['ORDINARIA', 'CUOTA ORDINARIA'],
+  extraordinary: ['EXTRAORDINARIA', 'CUOTA EXTRAORDINARIA'],
+  others: ['OTROS'],
+  note: ['NOTA', 'DETALLE OTROS'],
+  observation: ['OBSERVACION', 'OBSERVACIÓN']
+};
+
 function normalizeText(text) {
   if (!text) return '';
   return text
@@ -14,9 +26,9 @@ function normalizeText(text) {
 
 function findEmail(name, contacts) {
   const normalized = normalizeText(name);
-  if (contacts.has(normalized)) return contacts.get(normalized);
-  for (const [key, email] of contacts.entries()) {
-    if (key.includes(normalized) || normalized.includes(key)) return email;
+  if (contacts.has(normalized)) return contacts.get(normalized).email;
+  for (const [key, data] of contacts.entries()) {
+    if (key.includes(normalized) || normalized.includes(key)) return data.email;
   }
   return 'MODIFICAR@correo.cl';
 }
@@ -25,8 +37,12 @@ function App() {
   const [transactions, setTransactions] = useState([]);
   const [displayed, setDisplayed] = useState([]);
   const [contacts, setContacts] = useState(new Map());
+  const [allNames, setAllNames] = useState([]);
   const [monthFilter, setMonthFilter] = useState('');
   const [volFilter, setVolFilter] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [fileInfo, setFileInfo] = useState({ text: '', type: '' });
+  const [stats, setStats] = useState({ count: 0, total: 0 });
   const [pdfDoc, setPdfDoc] = useState(null);
   const [currentTx, setCurrentTx] = useState(null);
   const fileInput = useRef(null);
@@ -37,12 +53,16 @@ function App() {
       .then(r => r.json())
       .then(list => {
         const map = new Map();
+        const names = [];
         list.forEach(v => {
           if (v.nombre && v.apellido && v.correo) {
-            map.set(normalizeText(`${v.nombre} ${v.apellido}`), v.correo);
+            const name = `${v.nombre} ${v.apellido}`;
+            map.set(normalizeText(name), { email: v.correo, name });
+            names.push(name);
           }
         });
         setContacts(map);
+        setAllNames(names);
       })
       .catch(() => alert('No se pudo cargar volunteers.json'));
   }, []);
@@ -62,10 +82,31 @@ function App() {
     applyFilters();
   }, [transactions, monthFilter, volFilter]);
 
+  useEffect(() => {
+    const total = displayed.reduce((sum, t) => sum + (t.deposit || 0), 0);
+    setStats({ count: displayed.length, total });
+  }, [displayed]);
+
+  useEffect(() => {
+    const norm = normalizeText(volFilter);
+    if (!volFilter.trim()) { setSuggestions([]); return; }
+    const matches = allNames.filter(n => normalizeText(n).includes(norm)).slice(0,5);
+    setSuggestions(matches);
+  }, [volFilter, allNames]);
+
   function handleFile(e) {
     const file = e.target.files[0];
     if (!file) return;
-    readExcel(file).then(data => setTransactions(data));
+    setFileInfo({ text: `Cargando "${file.name}"...`, type: 'info' });
+    readExcel(file)
+      .then(data => {
+        setTransactions(data);
+        setFileInfo({ text: `✓ ${data.length} transacciones cargadas`, type: 'success' });
+      })
+      .catch(err => {
+        console.error(err);
+        setFileInfo({ text: `Error: ${err.message}`, type: 'error' });
+      });
   }
 
   function readExcel(file) {
@@ -74,38 +115,59 @@ function App() {
       reader.onload = e => {
         try {
           const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
-          const ws = wb.Sheets[wb.SheetNames[0]];
-          const json = XLSX.utils.sheet_to_json(ws, { raw: false, defval: null });
-          const mapped = json.map(row => normalizeTransaction(row));
-          resolve(mapped);
+          let sheetName = wb.SheetNames.find(n => {
+            const s = normalizeText(n);
+            return s.includes('DETALLE') || s.includes('MOVIMIENTO');
+          }) || wb.SheetNames[0];
+          const ws = wb.Sheets[sheetName];
+          const headers = XLSX.utils.sheet_to_json(ws, { header: 1 })[0];
+          const mappedHeaders = {};
+          for (const key in columnMapping) {
+            const possible = columnMapping[key];
+            const found = headers.find(h => h && possible.includes(normalizeText(h)));
+            if (found) mappedHeaders[key] = found;
+          }
+          if (!mappedHeaders.detail || !mappedHeaders.deposit) {
+            throw new Error('No se encontraron columnas de Detalle o Depósito');
+          }
+          const rows = XLSX.utils.sheet_to_json(ws, { raw: false, defval: null });
+          const data = rows.map(row => normalizeTransaction(row, field => {
+            const hdr = mappedHeaders[field];
+            if (!hdr) return null;
+            const rowKey = Object.keys(row).find(k => normalizeText(k) === normalizeText(hdr));
+            return row[rowKey];
+          }));
+          resolve(data);
         } catch (err) { reject(err); }
       };
-      reader.onerror = reject;
+      reader.onerror = () => reject(new Error('No se pudo leer el archivo'));
       reader.readAsArrayBuffer(file);
     });
   }
 
-  function normalizeTransaction(row) {
-    const name = extractName(row['DETALLE MOVIMIENTO'] || row['DETALLE'] || '');
+  function normalizeTransaction(row, getValue) {
+    const detail = getValue ? getValue('detail') : row['DETALLE MOVIMIENTO'] || row['DETALLE'] || '';
+    const name = extractName(detail);
     const email = findEmail(name, contacts);
     const parseAmount = val => {
       if (typeof val === 'number') return val;
       if (typeof val === 'string') return parseInt(val.replace(/[^0-9-]/g, '')) || 0;
       return 0;
     };
-    const date = new Date(row['FECHA']);
+    const dateVal = getValue ? getValue('date') : row['FECHA'];
+    const date = dateVal instanceof Date ? dateVal : new Date(dateVal);
     return {
       date,
       dateStr: isNaN(date) ? 'Fecha inválida' : date.toLocaleDateString('es-CL'),
       name,
       email,
-      valeNumber: row['N VALE'] || row['N° VALE'] || '',
-      deposit: parseAmount(row['DEPOSITO'] || row['TOTAL']),
-      ordinary: parseAmount(row['ORDINARIA']),
-      extraordinary: parseAmount(row['EXTRAORDINARIA']),
-      others: parseAmount(row['OTROS']),
-      note: row['NOTA'] || '',
-      observation: row['OBSERVACION'] || ''
+      valeNumber: (getValue ? getValue('valeNumber') : row['N VALE'] || row['N° VALE']) || '',
+      deposit: parseAmount(getValue ? getValue('deposit') : (row['DEPOSITO'] || row['TOTAL'])),
+      ordinary: parseAmount(getValue ? getValue('ordinary') : row['ORDINARIA']),
+      extraordinary: parseAmount(getValue ? getValue('extraordinary') : row['EXTRAORDINARIA']),
+      others: parseAmount(getValue ? getValue('others') : row['OTROS']),
+      note: (getValue ? getValue('note') : row['NOTA']) || '',
+      observation: (getValue ? getValue('observation') : row['OBSERVACION']) || ''
     };
   }
 
@@ -195,6 +257,7 @@ function App() {
                 <label className="upload-button" onClick={()=>fileInput.current.click()}>
                   <i className="fas fa-cloud-upload-alt"></i><span>Seleccionar archivo Excel</span>
                 </label>
+                <div className={`file-info ${fileInfo.type}`} style={{display:fileInfo.text? 'block':'none'}}>{fileInfo.text}</div>
               </div>
             </div>
           </div>
@@ -203,7 +266,17 @@ function App() {
             <div className="card-body">
               <div className="form-group">
                 <label htmlFor="volunteer-filter"><i className="fas fa-user"></i> Voluntario</label>
-                <input id="volunteer-filter" className="form-control" value={volFilter} onChange={e=>setVolFilter(e.target.value)} placeholder="Buscar por nombre..." />
+                <div className="input-with-clear">
+                  <input id="volunteer-filter" className="form-control" value={volFilter} onChange={e=>setVolFilter(e.target.value)} placeholder="Buscar por nombre..." autoComplete="off" />
+                  {volFilter && <button className="btn-clear" onClick={()=>setVolFilter('')}><i className="fas fa-times"></i></button>}
+                  {suggestions.length>0 && (
+                    <div className="suggestions-box show">
+                      {suggestions.map((s,i)=>(
+                        <div key={i} className="suggestion-item" onClick={()=>{setVolFilter(s);setSuggestions([]);}}>{s}</div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="form-group">
                 <label htmlFor="month-filter"><i className="fas fa-calendar"></i> Período</label>
@@ -221,6 +294,16 @@ function App() {
               <h3 id="results-title"><i className="fas fa-table"></i> Movimientos</h3>
             </div>
             <div className="card-body">
+              <div className="stats-grid" style={{marginBottom:'15px'}}>
+                <div className="stat-item">
+                  <div className="stat-value">{stats.count.toLocaleString('es-CL')}</div>
+                  <div className="stat-label">Registros</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-value">{formatCurrency(stats.total)}</div>
+                  <div className="stat-label">Total Depósito</div>
+                </div>
+              </div>
               {displayed.length===0 ? (
                 <div id="no-data" className="no-data-message" style={{display:'block'}}>
                   <i className="fas fa-inbox fa-3x"></i>
