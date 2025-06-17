@@ -27,8 +27,13 @@ function normalizeText(text) {
 function findEmail(name, contacts) {
   const normalized = normalizeText(name);
   if (contacts.has(normalized)) return contacts.get(normalized).email;
+  const tokens = normalized.split(' ');
   for (const [key, data] of contacts.entries()) {
     if (key.includes(normalized) || normalized.includes(key)) return data.email;
+    const keyTokens = key.split(' ');
+    const allInKey = tokens.every(t => keyTokens.includes(t));
+    const allInNormalized = keyTokens.every(t => tokens.includes(t));
+    if (allInKey || allInNormalized) return data.email;
   }
   return 'MODIFICAR@correo.cl';
 }
@@ -120,7 +125,15 @@ function App() {
             return s.includes('DETALLE') || s.includes('MOVIMIENTO');
           }) || wb.SheetNames[0];
           const ws = wb.Sheets[sheetName];
-          const headers = XLSX.utils.sheet_to_json(ws, { header: 1 })[0];
+          const matrix = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+          let headerIndex = matrix.findIndex(row => {
+            const nrow = row.map(c => normalizeText(c));
+            const hasDetail = columnMapping.detail.some(h => nrow.includes(normalizeText(h)));
+            const hasDeposit = columnMapping.deposit.some(h => nrow.includes(normalizeText(h)));
+            return hasDetail && hasDeposit;
+          });
+          if (headerIndex < 0) headerIndex = 0;
+          const headers = matrix[headerIndex];
           const mappedHeaders = {};
           for (const key in columnMapping) {
             const possible = columnMapping[key];
@@ -130,7 +143,7 @@ function App() {
           if (!mappedHeaders.detail || !mappedHeaders.deposit) {
             throw new Error('No se encontraron columnas de Detalle o Depósito');
           }
-          const rows = XLSX.utils.sheet_to_json(ws, { raw: false, defval: null });
+          const rows = XLSX.utils.sheet_to_json(ws, { raw: false, defval: null, range: headerIndex + 1 });
           const data = rows.map(row => normalizeTransaction(row, field => {
             const hdr = mappedHeaders[field];
             if (!hdr) return null;
