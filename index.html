@@ -4,18 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Tesorería - Segunda Compañía</title>
+    
+    <!-- Google Fonts para mejor tipografía -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Estilos principales -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Meta tags para SEO y PWA -->
+    <meta name="description" content="Sistema de gestión de tesorería para la Segunda Compañía de Bomberos de Ñuñoa">
+    <meta name="theme-color" content="#c41e3a">
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    
+    <!-- Optimización de carga -->
+    <link rel="preload" href="escudo-original.png" as="image">
 </head>
 <body>
+
+
     <div class="app-container">
+        <!-- Header principal con efectos mejorados -->
         <header class="main-header">
             <div class="header-wrapper">
-                <img src="escudo-original.png" alt="Segunda Compañía" class="header-logo">
+                <div class="logo-container">
+                    <img src="escudo-original.png" alt="Segunda Compañía de Bomberos de Ñuñoa" class="header-logo">
+                    <div class="logo-glow"></div>
+                </div>
                 <div class="header-info">
-                    <h1>Sistema de Tesorería</h1>
-                    <h2>Segunda Compañía de Bomberos de Ñuñoa</h2>
+                    <h1>
+                        <span class="title-primary">Sistema de Tesorería</span>
+                        <div class="title-decoration"></div>
+                    </h1>
+                    <h2>
+                        <i class="fas fa-fire-flame-curved"></i>
+                        Segunda Compañía de Bomberos de Ñuñoa
+                    </h2>
+
                 </div>
             </div>
         </header>
@@ -175,6 +202,8 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="app.js"></script>
+    <div id="toast-container"></div>
 </body>
 </html>
