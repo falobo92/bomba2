@@ -653,6 +653,129 @@ Este comprobante fue generado el ${currentDate}`;
     });
     suggestionsBox.addEventListener('click', (e) => { if (e.target.classList.contains('suggestion-item')) { input.value = e.target.dataset.name; suggestionsBox.classList.remove('show'); } });
     document.addEventListener('click', (e) => { if (!input.contains(e.target) && !suggestionsBox.contains(e.target)) { suggestionsBox.classList.remove('show'); } });
+
+    // Agregar el listener para el formulario de generar vale
+    document.getElementById('generate-vale-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.generateValeFromForm();
+    });
+  }
+
+  openGenerateValeModal() {
+    document.getElementById('generate-vale-modal').classList.add('show');
+    // Establecer la fecha actual como valor predeterminado
+    document.getElementById('payment-date').valueAsDate = new Date();
+  }
+
+  closeGenerateValeModal() {
+    document.getElementById('generate-vale-modal').classList.remove('show');
+    document.getElementById('generate-vale-form').reset();
+  }
+
+  generateValeFromForm() {
+    const names = document.getElementById('volunteer-names').value;
+    const lastnames = document.getElementById('volunteer-lastnames').value;
+    const email = document.getElementById('volunteer-email').value;
+    const date = document.getElementById('payment-date').value;
+    const valeNumber = document.getElementById('vale-number').value;
+    const concept = document.getElementById('payment-concept').value;
+    const amount = parseFloat(document.getElementById('payment-amount').value);
+    const note = document.getElementById('payment-note').value;
+
+    // Crear objeto de transacción para el vale
+    const transaction = {
+      nameFromExcel: `${names} ${lastnames}`,
+      dateStr: new Date(date).toLocaleDateString('es-CL'),
+      deposit: amount,
+      ordinary: concept === 'ordinary' ? amount : 0,
+      extraordinary: concept === 'extraordinary' ? amount : 0,
+      others: concept === 'others' ? amount : 0,
+      note: note,
+      officialDisplayName: `${names} ${lastnames}`,
+      email: email,
+      nombre: names,
+      apellido: lastnames,
+      valeNumber: valeNumber
+    };
+
+    // Generar el PDF directamente
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'letter');
+    const PW = 215.9, PH = 279.4, M = 20;
+
+    doc.setFillColor(240, 240, 240);
+    doc.rect(0, 0, PW, 40, 'F');
+    if (this.images.logo) {
+      const logoWidth = 25;
+      const aspectRatio = this.images.logo.height / this.images.logo.width;
+      const logoHeight = logoWidth * aspectRatio;
+      doc.addImage(this.images.logo, 'PNG', M, (40 - logoHeight) / 2, logoWidth, logoHeight);
+    }
+    doc.setFontSize(18); doc.setFont(undefined, 'bold'); doc.text('TESORERÍA – 2ª COMPAÑÍA', PW - M, 15, { align: 'right' });
+    doc.setFontSize(12); doc.setFont(undefined, 'normal'); doc.text('La Vida por la Humanidad', PW - M, 23, { align: 'right' });
+
+    const startY = 50;
+    const labelX = M + 4, valueX = M + 50, lineH = 8;
+    let y = startY + 10;
+
+    const pdfName = `${lastnames}, ${names}`.toUpperCase();
+
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold'); doc.text('N° Vale:', labelX, y); doc.setFont(undefined, 'normal'); doc.text(valeNumber, valueX, y);
+    y += lineH * 1.5; doc.setFont(undefined, 'bold'); doc.text('Nombre:', labelX, y); doc.setFont(undefined, 'normal'); doc.text(pdfName, valueX, y, { maxWidth: PW - valueX - M });
+    y += lineH * 1.5; doc.setFont(undefined, 'bold'); doc.text('Fecha:', labelX, y); doc.setFont(undefined, 'normal'); doc.text(transaction.dateStr, valueX, y);
+    y += lineH * 1.5; doc.setFont(undefined, 'bold'); doc.text('Detalle Otros:', labelX, y); doc.setFont(undefined, 'normal'); doc.text(note || '-', valueX, y, { maxWidth: PW - valueX - M });
+    doc.setLineWidth(0.2); doc.rect(M, startY, PW - 2 * M, y - startY + 5);
+
+    const tableY = y + 10;
+    const colW = (PW - 2 * M) / 3;
+    doc.setFontSize(10);
+    ['Ordinaria', 'Extraordinaria', 'Otros'].forEach((hdr, i) => {
+      const x = M + i * colW;
+      doc.rect(x, tableY, colW, 20);
+      doc.setFont(undefined, 'bold'); doc.text(hdr, x + colW / 2, tableY + 6, { align: 'center' });
+      doc.setFont(undefined, 'normal'); const val = [transaction.ordinary, transaction.extraordinary, transaction.others][i];
+      doc.text(this.formatCurrency(val), x + colW / 2, tableY + 14, { align: 'center' });
+    });
+
+    const totalY = tableY + 25;
+    doc.setFillColor(230, 230, 250); doc.rect(M, totalY, PW - 2 * M, 15, 'F');
+    doc.setFontSize(14); doc.setFont(undefined, 'bold');
+    doc.text('TOTAL:', M + 10, totalY + 10); doc.text(this.formatCurrency(transaction.deposit), PW - M - 10, totalY + 10, { align: 'right' });
+
+    const signY = PH - 65;
+    if (this.images.signature) {
+      const ratio = this.images.signature.height / this.images.signature.width;
+      const sigWidth = 50; const sigHeight = sigWidth * ratio;
+      doc.addImage(this.images.signature, 'PNG', M + 10, signY, sigWidth, sigHeight);
+    }
+    doc.setLineWidth(0.3); doc.line(M + 10, signY + 30, M + 70, signY + 30);
+    doc.setFontSize(11); doc.setFont(undefined, 'normal'); doc.text('Tesorero', M + 40, signY + 36, { align: 'center' });
+    const now = new Date(); const footer = `Emitido: ${now.toLocaleString('es-CL')}`;
+    doc.setFontSize(8); doc.text(footer, PW / 2, PH - 10, { align: 'center' });
+
+    // Guardar el PDF generado y mostrarlo en el modal
+    this.currentPdfDoc = doc;
+    this.currentTransactionForModal = transaction;
+    document.getElementById('vale-preview').src = doc.output('datauristring');
+    document.getElementById('vale-modal').classList.add('show');
+
+    // Generar y enviar el correo
+    const paymentConcept = this.getPaymentConcept(transaction);
+    const currentDate = new Date().toLocaleDateString('es-CL', {
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric'
+    });
+    
+    const subject = encodeURIComponent(`Comprobante de ${paymentConcept} - Segunda Compañía`);
+    const body = encodeURIComponent(this.createEmailBody(transaction, paymentConcept, currentDate));
+    
+    const mailtoLink = `mailto:${email}?subject=${subject}&body=${body}`;
+    window.open(mailtoLink, '_blank');
+
+    this.closeGenerateValeModal();
+    this.showMessage('Vale generado y correo preparado exitosamente', 'success');
   }
 }
 
