@@ -524,7 +524,7 @@ class TreasurySystem {
     
     // Agregar observaciones si existen
     if (transaction.note && transaction.note.trim() !== '') {
-      detalles += `\n• Observaciones: ${transaction.note}`;
+      detalles += `\n• Detalle Otros: ${transaction.note}`;
     }
     
     // Agregar desglose si hay múltiples conceptos
