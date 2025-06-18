@@ -63,7 +63,7 @@
                             <input type="file" id="file-input" accept=".xlsx,.xls,.xlsm,.xlsb" hidden>
                             <label for="file-input" class="upload-button">
                                 <i class="fas fa-cloud-upload-alt"></i>
-                                <span>Seleccionar archivo Excel</span>
+                                <span>Seleccionar archivo</span>
                             </label>
                             <div id="file-info" class="file-info"></div>
                         </div>
@@ -254,6 +254,71 @@
                     </div>
                     <div class="form-actions">
                         <button type="submit" class="btn-generate">Generar Vale</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar transacción -->
+    <div id="edit-transaction-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Editar Transacción</h2>
+                <button class="close-button" onclick="treasury.closeEditTransactionModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-transaction-form" class="form-container">
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label for="volunteer-select">Seleccionar Voluntario</label>
+                            <select id="volunteer-select" class="form-control">
+                                <option value="">Seleccione un voluntario...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-volunteer-names">Nombres</label>
+                            <input type="text" id="edit-volunteer-names" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-volunteer-lastnames">Apellidos</label>
+                            <input type="text" id="edit-volunteer-lastnames" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-volunteer-email">Correo Electrónico</label>
+                        <input type="email" id="edit-volunteer-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-payment-date">Fecha de Pago</label>
+                        <input type="date" id="edit-payment-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-vale-number">Número de Vale</label>
+                        <input type="text" id="edit-vale-number" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-payment-concept">Concepto de Pago</label>
+                        <select id="edit-payment-concept" required>
+                            <option value="ordinary">Cuota Ordinaria</option>
+                            <option value="extraordinary">Cuota Extraordinaria</option>
+                            <option value="others">Otros Conceptos</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-payment-amount">Monto</label>
+                        <input type="number" id="edit-payment-amount" min="0" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="edit-payment-note">Observaciones</label>
+                        <textarea id="edit-payment-note"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-generate">Guardar Cambios</button>
                     </div>
                 </form>
             </div>

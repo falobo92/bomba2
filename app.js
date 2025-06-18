@@ -91,6 +91,7 @@ class TreasurySystem {
     this.images = { logo: null, signature: null };
     this.currentPdfDoc = null;
     this.currentTransactionForModal = null;
+    this.editingTransactionIndex = null;
     this.init();
   }
 
@@ -276,18 +277,20 @@ class TreasurySystem {
       noDataDiv.style.display = 'none';
       tbody.innerHTML = this.displayedTransactions.map((t, index) => {
         const isSent = this.sentVales.has(t.id);
+        const hasNoEmail = t.email === 'correo@reemplazame.cl';
         const sentClass = isSent ? 'sent' : '';
+        const noEmailClass = hasNoEmail ? 'no-email' : '';
         const buttonHtml = isSent
           ? `<div class="action-buttons">
-              <button class="btn-vale" onclick="treasury.generateVale(${index})"><i class="fas fa-file-pdf"></i> Ver Vale</button>
-              <button class="btn-vale btn-uncheck" onclick="treasury.unmarkAsSent(${index})"><i class="fas fa-times"></i></button>
+              <button class="btn-vale" onclick="event.stopPropagation(); treasury.generateVale(${index})"><i class="fas fa-file-pdf"></i> Ver Vale</button>
+              <button class="btn-vale btn-uncheck" onclick="event.stopPropagation(); treasury.unmarkAsSent(${index})"><i class="fas fa-times"></i></button>
             </div>`
           : `<div class="action-buttons">
-              <button class="btn-vale" onclick="treasury.generateVale(${index})"><i class="fas fa-file-pdf"></i> Ver Vale</button>
-              <button class="btn-vale" onclick="treasury.markAsSent(${index})"><i class="fas fa-check"></i></button>
+              <button class="btn-vale" onclick="event.stopPropagation(); treasury.generateVale(${index})"><i class="fas fa-file-pdf"></i> Ver Vale</button>
+              <button class="btn-vale" onclick="event.stopPropagation(); treasury.markAsSent(${index})"><i class="fas fa-check"></i></button>
             </div>`;
         return `
-          <tr class="${sentClass}">
+          <tr class="${sentClass} ${noEmailClass}" onclick="treasury.openEditTransactionModal(${index})" style="cursor: pointer;">
               <td>${t.dateStr}</td>
               <td>${t.nameFromExcel}</td>
               <td>${t.valeNumber || '-'}</td>
@@ -659,6 +662,17 @@ Este comprobante fue generado el ${currentDate}`;
       e.preventDefault();
       this.generateValeFromForm();
     });
+
+    // Agregar el listener para el formulario de editar transacción
+    document.getElementById('edit-transaction-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.saveTransactionEdit();
+    });
+
+    // Agregar el listener para el select de voluntarios
+    document.getElementById('volunteer-select').addEventListener('change', () => {
+      this.handleVolunteerSelect();
+    });
   }
 
   openGenerateValeModal() {
@@ -776,6 +790,134 @@ Este comprobante fue generado el ${currentDate}`;
 
     this.closeGenerateValeModal();
     this.showMessage('Vale generado y correo preparado exitosamente', 'success');
+  }
+
+  openEditTransactionModal(index) {
+    const transaction = this.displayedTransactions[index];
+    if (!transaction) return;
+
+    // Cargar la lista de voluntarios
+    this.loadVolunteersList();
+
+    // Llenar el formulario con los datos de la transacción
+    document.getElementById('edit-volunteer-names').value = transaction.nombre || '';
+    document.getElementById('edit-volunteer-lastnames').value = transaction.apellido || '';
+    document.getElementById('edit-volunteer-email').value = transaction.email || '';
+    document.getElementById('edit-payment-date').value = transaction.date ? transaction.date.toISOString().split('T')[0] : '';
+    document.getElementById('edit-vale-number').value = transaction.valeNumber || '';
+    
+    // Determinar el concepto de pago
+    let concept = 'others';
+    if (transaction.ordinary) concept = 'ordinary';
+    else if (transaction.extraordinary) concept = 'extraordinary';
+    document.getElementById('edit-payment-concept').value = concept;
+    
+    document.getElementById('edit-payment-amount').value = transaction.deposit || '';
+    document.getElementById('edit-payment-note').value = transaction.note || '';
+
+    // Guardar el índice de la transacción que se está editando
+    this.editingTransactionIndex = index;
+
+    // Mostrar el modal
+    document.getElementById('edit-transaction-modal').classList.add('show');
+  }
+
+  loadVolunteersList() {
+    // Obtener todos los voluntarios únicos de las transacciones
+    const volunteers = new Set();
+    this.transactions.forEach(t => {
+      if (t.nombre && t.apellido) {
+        volunteers.add(`${t.nombre} ${t.apellido}`);
+      }
+    });
+
+    // Convertir el Set a un array y ordenarlo alfabéticamente
+    const sortedVolunteers = Array.from(volunteers).sort();
+
+    // Obtener el elemento select
+    const select = document.getElementById('volunteer-select');
+    if (!select) return;
+
+    // Limpiar opciones existentes excepto la primera
+    while (select.options.length > 1) {
+      select.remove(1);
+    }
+
+    // Agregar las opciones
+    sortedVolunteers.forEach(volunteer => {
+      const option = document.createElement('option');
+      option.value = volunteer;
+      option.textContent = volunteer;
+      select.appendChild(option);
+    });
+  }
+
+  handleVolunteerSelect() {
+    const select = document.getElementById('volunteer-select');
+    const selectedValue = select.value;
+    
+    if (selectedValue && selectedValue !== '') {
+      const [nombre, ...apellidos] = selectedValue.split(' ');
+      const apellido = apellidos.join(' ');
+      
+      document.getElementById('edit-volunteer-names').value = nombre;
+      document.getElementById('edit-volunteer-lastnames').value = apellido;
+      
+      // Buscar el email correspondiente en las transacciones
+      const transaction = this.transactions.find(t => 
+        t.nombre === nombre && t.apellido === apellido
+      );
+      
+      if (transaction) {
+        document.getElementById('edit-volunteer-email').value = transaction.email || '';
+      }
+    }
+  }
+
+  closeEditTransactionModal() {
+    document.getElementById('edit-transaction-modal').classList.remove('show');
+    document.getElementById('edit-transaction-form').reset();
+    this.editingTransactionIndex = null;
+  }
+
+  saveTransactionEdit() {
+    if (this.editingTransactionIndex === null) return;
+
+    const transaction = this.displayedTransactions[this.editingTransactionIndex];
+    if (!transaction) return;
+
+    // Obtener los valores del formulario
+    const names = document.getElementById('edit-volunteer-names').value;
+    const lastnames = document.getElementById('edit-volunteer-lastnames').value;
+    const email = document.getElementById('edit-volunteer-email').value;
+    const date = document.getElementById('edit-payment-date').value;
+    const valeNumber = document.getElementById('edit-vale-number').value;
+    const concept = document.getElementById('edit-payment-concept').value;
+    const amount = parseFloat(document.getElementById('edit-payment-amount').value);
+    const note = document.getElementById('edit-payment-note').value;
+
+    // Actualizar la transacción
+    transaction.nombre = names;
+    transaction.apellido = lastnames;
+    transaction.email = email;
+    transaction.date = new Date(date);
+    transaction.dateStr = new Date(date).toLocaleDateString('es-CL');
+    transaction.valeNumber = valeNumber;
+    transaction.note = note;
+    transaction.deposit = amount;
+    transaction.ordinary = concept === 'ordinary' ? amount : 0;
+    transaction.extraordinary = concept === 'extraordinary' ? amount : 0;
+    transaction.others = concept === 'others' ? amount : 0;
+    transaction.nameFromExcel = `${names} ${lastnames}`;
+    transaction.officialDisplayName = `${names} ${lastnames}`;
+
+    // Actualizar la visualización
+    this.displayResults();
+    this.updateStats();
+
+    // Cerrar el modal
+    this.closeEditTransactionModal();
+    this.showMessage('Transacción actualizada exitosamente', 'success');
   }
 }
 
