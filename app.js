@@ -681,8 +681,12 @@ Este comprobante fue generado el ${currentDate}`;
   }
 
   openGenerateValeModal() {
+    console.log('Abriendo modal de generar vale...');
     // Cargar la lista de voluntarios
     this.loadVolunteersListGenerate();
+    
+    // Establecer la fecha actual como valor predeterminado
+    document.getElementById('payment-date').valueAsDate = new Date();
     
     // Mostrar el modal
     document.getElementById('generate-vale-modal').classList.add('show');
@@ -928,20 +932,29 @@ Este comprobante fue generado el ${currentDate}`;
   }
 
   loadVolunteersListGenerate() {
+    console.log('Iniciando carga de voluntarios...');
+    console.log('Transacciones disponibles:', this.transactions.length);
+
     // Obtener todos los voluntarios únicos de las transacciones
     const volunteers = new Set();
     this.transactions.forEach(t => {
       if (t.nombre && t.apellido) {
-        volunteers.add(`${t.nombre} ${t.apellido}`);
+        const fullName = `${t.nombre} ${t.apellido}`;
+        volunteers.add(fullName);
+        console.log('Agregando voluntario:', fullName);
       }
     });
 
     // Convertir el Set a un array y ordenarlo alfabéticamente
     const sortedVolunteers = Array.from(volunteers).sort();
+    console.log('Voluntarios únicos encontrados:', sortedVolunteers);
 
     // Obtener el elemento select
     const select = document.getElementById('volunteer-select-generate');
-    if (!select) return;
+    if (!select) {
+      console.error('No se encontró el elemento select de voluntarios');
+      return;
+    }
 
     // Limpiar opciones existentes excepto la primera
     while (select.options.length > 1) {
@@ -955,6 +968,8 @@ Este comprobante fue generado el ${currentDate}`;
       option.textContent = volunteer;
       select.appendChild(option);
     });
+
+    console.log('Voluntarios cargados en el select:', select.options.length - 1);
   }
 
   handleVolunteerSelectGenerate() {
