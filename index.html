@@ -216,13 +216,23 @@
             </div>
             <div class="modal-body">
                 <form id="generate-vale-form" class="form-container">
-                    <div class="form-group">
-                        <label for="volunteer-names">Nombres</label>
-                        <input type="text" id="volunteer-names" required>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label for="volunteer-select-generate">Seleccionar Voluntario</label>
+                            <select id="volunteer-select-generate" class="form-control">
+                                <option value="">Seleccione un voluntario...</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="volunteer-lastnames">Apellidos</label>
-                        <input type="text" id="volunteer-lastnames" required>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="volunteer-names">Nombres</label>
+                            <input type="text" id="volunteer-names" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="volunteer-lastnames">Apellidos</label>
+                            <input type="text" id="volunteer-lastnames" required>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="volunteer-email">Correo Electrónico</label>

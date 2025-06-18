@@ -673,12 +673,19 @@ Este comprobante fue generado el ${currentDate}`;
     document.getElementById('volunteer-select').addEventListener('change', () => {
       this.handleVolunteerSelect();
     });
+
+    // Agregar el listener para el select de voluntarios en el formulario de generar vale
+    document.getElementById('volunteer-select-generate').addEventListener('change', () => {
+      this.handleVolunteerSelectGenerate();
+    });
   }
 
   openGenerateValeModal() {
+    // Cargar la lista de voluntarios
+    this.loadVolunteersListGenerate();
+    
+    // Mostrar el modal
     document.getElementById('generate-vale-modal').classList.add('show');
-    // Establecer la fecha actual como valor predeterminado
-    document.getElementById('payment-date').valueAsDate = new Date();
   }
 
   closeGenerateValeModal() {
@@ -918,6 +925,58 @@ Este comprobante fue generado el ${currentDate}`;
     // Cerrar el modal
     this.closeEditTransactionModal();
     this.showMessage('Transacción actualizada exitosamente', 'success');
+  }
+
+  loadVolunteersListGenerate() {
+    // Obtener todos los voluntarios únicos de las transacciones
+    const volunteers = new Set();
+    this.transactions.forEach(t => {
+      if (t.nombre && t.apellido) {
+        volunteers.add(`${t.nombre} ${t.apellido}`);
+      }
+    });
+
+    // Convertir el Set a un array y ordenarlo alfabéticamente
+    const sortedVolunteers = Array.from(volunteers).sort();
+
+    // Obtener el elemento select
+    const select = document.getElementById('volunteer-select-generate');
+    if (!select) return;
+
+    // Limpiar opciones existentes excepto la primera
+    while (select.options.length > 1) {
+      select.remove(1);
+    }
+
+    // Agregar las opciones
+    sortedVolunteers.forEach(volunteer => {
+      const option = document.createElement('option');
+      option.value = volunteer;
+      option.textContent = volunteer;
+      select.appendChild(option);
+    });
+  }
+
+  handleVolunteerSelectGenerate() {
+    const select = document.getElementById('volunteer-select-generate');
+    const selectedValue = select.value;
+    
+    if (selectedValue && selectedValue !== '') {
+      const [nombre, ...apellidos] = selectedValue.split(' ');
+      const apellido = apellidos.join(' ');
+      
+      document.getElementById('volunteer-names').value = nombre;
+      document.getElementById('volunteer-lastnames').value = apellido;
+      
+      // Buscar el email correspondiente en las transacciones
+      const transaction = this.transactions.find(t => 
+        t.nombre === nombre && t.apellido === apellido
+      );
+      
+      if (transaction) {
+        document.getElementById('volunteer-email').value = transaction.email || '';
+      }
+    }
   }
 }
 
