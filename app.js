@@ -154,7 +154,7 @@ class TreasurySystem {
           });
         }
       });
-      this.showMessage('Lista de voluntarios cargada. Listo para importar archivo Excel.', 'success');
+      this.showMessage('Lista de voluntarios cargada.', 'success');
     } catch (error) {
       this.showMessage('Error: No se pudo cargar `volunteers.json`. La aplicación no funcionará correctamente.', 'error', false);
     }
@@ -278,8 +278,14 @@ class TreasurySystem {
         const isSent = this.sentVales.has(t.id);
         const sentClass = isSent ? 'sent' : '';
         const buttonHtml = isSent
-          ? `<button class="btn-vale" disabled><i class="fas fa-check"></i> Enviado</button>`
-          : `<button class="btn-vale" onclick="treasury.generateVale(${index})"><i class="fas fa-file-pdf"></i> Ver Vale</button>`;
+          ? `<div class="action-buttons">
+              <button class="btn-vale" onclick="treasury.generateVale(${index})"><i class="fas fa-file-pdf"></i> Ver Vale</button>
+              <button class="btn-vale btn-uncheck" onclick="treasury.unmarkAsSent(${index})"><i class="fas fa-times"></i></button>
+            </div>`
+          : `<div class="action-buttons">
+              <button class="btn-vale" onclick="treasury.generateVale(${index})"><i class="fas fa-file-pdf"></i> Ver Vale</button>
+              <button class="btn-vale" onclick="treasury.markAsSent(${index})"><i class="fas fa-check"></i></button>
+            </div>`;
         return `
           <tr class="${sentClass}">
               <td>${t.dateStr}</td>
@@ -293,6 +299,30 @@ class TreasurySystem {
               <td>${buttonHtml}</td>
           </tr>`;
       }).join('');
+    }
+  }
+
+  markAsSent(index) {
+    const transaction = this.displayedTransactions[index];
+    if (!transaction) return;
+    
+    if (confirm('¿Está seguro de marcar este vale como enviado?')) {
+      this.sentVales.add(transaction.id);
+      this.updateSentValesStorage();
+      this.displayResults();
+      this.showMessage('Vale marcado como enviado.', 'success');
+    }
+  }
+
+  unmarkAsSent(index) {
+    const transaction = this.displayedTransactions[index];
+    if (!transaction) return;
+    
+    if (confirm('¿Está seguro de quitar el check de enviado de este vale?')) {
+      this.sentVales.delete(transaction.id);
+      this.updateSentValesStorage();
+      this.displayResults();
+      this.showMessage('Check de enviado quitado.', 'success');
     }
   }
 
@@ -386,95 +416,129 @@ class TreasurySystem {
     document.getElementById('vale-modal').classList.add('show');
   }
 
-handleEmailVale() {
-  const transaction = this.currentTransactionForModal;
-  if (!transaction) return;
-  
-  this.downloadCurrentPdf();
-  
-  // Determinar el concepto de pago con mejor lógica
-  let paymentConcept = this.getPaymentConcept(transaction);
-  
-  // Crear fecha actual formateada
-  const currentDate = new Date().toLocaleDateString('es-CL', {
-    day: '2-digit',
-    month: '2-digit', 
-    year: 'numeric'
-  });
-  
-  const subject = encodeURIComponent(`Comprobante de ${paymentConcept} - Segunda Compañía`);
-  
-  // Crear el cuerpo del correo mejorado
-  const body = encodeURIComponent(this.createEmailBody(transaction, paymentConcept, currentDate));
-  
-  const emailAction = () => {
-    window.location.href = `mailto:${transaction.email === 'correo@reemplazame.cl' ? '' : transaction.email}?subject=${subject}&body=${body}`;
-    alert("Se abrirá su cliente de correo. No olvide adjuntar el PDF descargado.");
-    this.sentVales.add(transaction.id);
-    this.updateSentValesStorage();
-    closeValeModal();
-    this.displayResults();
-  };
-  
-  if (transaction.email === 'correo@reemplazame.cl') {
-    alert("No se encontró un correo para este voluntario. Se abrirá el cliente de correo para que ingrese la dirección manualmente.");
+  showMessage(message, type = 'info') {
+    const toastContainer = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    let icon = '';
+    switch(type) {
+      case 'success':
+        icon = 'fas fa-check-circle';
+        break;
+      case 'error':
+        icon = 'fas fa-exclamation-circle';
+        break;
+      default:
+        icon = 'fas fa-info-circle';
+    }
+    
+    toast.innerHTML = `
+      <i class="${icon}"></i>
+      <span>${message}</span>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    // Remover el toast después de 3 segundos
+    setTimeout(() => {
+      toast.style.animation = 'fadeOut 0.3s ease-out forwards';
+      setTimeout(() => {
+        toastContainer.removeChild(toast);
+      }, 300);
+    }, 3000);
   }
-  
-  emailAction();
-}
 
-// Función para determinar el concepto de pago
-getPaymentConcept(transaction) {
-  const hasOrdinary = transaction.ordinary > 0;
-  const hasExtraordinary = transaction.extraordinary > 0;
-  const hasOthers = transaction.others > 0;
-  
-  // Múltiples conceptos
-  if ((hasOrdinary && hasExtraordinary) || (hasOrdinary && hasOthers) || (hasExtraordinary && hasOthers) || (hasOrdinary && hasExtraordinary && hasOthers)) {
-    return 'Abono Múltiple';
+  handleEmailVale() {
+    const transaction = this.currentTransactionForModal;
+    if (!transaction) return;
+    
+    this.downloadCurrentPdf();
+    
+    // Determinar el concepto de pago con mejor lógica
+    let paymentConcept = this.getPaymentConcept(transaction);
+    
+    // Crear fecha actual formateada
+    const currentDate = new Date().toLocaleDateString('es-CL', {
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric'
+    });
+    
+    const subject = encodeURIComponent(`Comprobante de ${paymentConcept} - Segunda Compañía`);
+    
+    // Crear el cuerpo del correo mejorado
+    const body = encodeURIComponent(this.createEmailBody(transaction, paymentConcept, currentDate));
+    
+    const emailAction = () => {
+      const mailtoLink = `mailto:${transaction.email === 'correo@reemplazame.cl' ? '' : transaction.email}?subject=${subject}&body=${body}`;
+      window.open(mailtoLink, '_blank');
+      this.showMessage("Se abrirá su cliente de correo. No olvide adjuntar el PDF descargado.", "info");
+      this.sentVales.add(transaction.id);
+      this.updateSentValesStorage();
+      closeValeModal();
+      this.displayResults();
+    };
+    
+    if (transaction.email === 'correo@reemplazame.cl') {
+      this.showMessage("No se encontró un correo para este voluntario. Se abrirá el cliente de correo para que ingrese la dirección manualmente.", "info");
+    }
+    
+    emailAction();
   }
-  
-  // Conceptos únicos
-  if (hasOrdinary && !hasExtraordinary && !hasOthers) {
-    return 'Cuota Ordinaria';
-  }
-  
-  if (hasExtraordinary && !hasOrdinary && !hasOthers) {
-    return 'Cuota Extraordinaria';
-  }
-  
-  if (hasOthers && !hasOrdinary && !hasExtraordinary) {
-    return 'Otros Conceptos';
-  }
-  
-  // Fallback
-  return 'Abono/Pago';
-}
 
-// Función para crear el cuerpo del correo
-createEmailBody(transaction, paymentConcept, currentDate) {
-  let detalles = `• Concepto: ${paymentConcept}\n• Fecha: ${transaction.dateStr}\n• Monto: ${this.formatCurrency(transaction.deposit)}`;
-  
-  // Agregar observaciones si existen
-  if (transaction.note && transaction.note.trim() !== '') {
-    detalles += `\n• Observaciones: ${transaction.note}`;
+  // Función para determinar el concepto de pago
+  getPaymentConcept(transaction) {
+    const hasOrdinary = transaction.ordinary > 0;
+    const hasExtraordinary = transaction.extraordinary > 0;
+    const hasOthers = transaction.others > 0;
+    
+    // Múltiples conceptos
+    if ((hasOrdinary && hasExtraordinary) || (hasOrdinary && hasOthers) || (hasExtraordinary && hasOthers) || (hasOrdinary && hasExtraordinary && hasOthers)) {
+      return 'Abono Múltiple';
+    }
+    
+    // Conceptos únicos
+    if (hasOrdinary && !hasExtraordinary && !hasOthers) {
+      return 'Cuota Ordinaria';
+    }
+    
+    if (hasExtraordinary && !hasOrdinary && !hasOthers) {
+      return 'Cuota Extraordinaria';
+    }
+    
+    if (hasOthers && !hasOrdinary && !hasExtraordinary) {
+      return 'Otros Conceptos';
+    }
+    
+    // Fallback
+    return 'Abono/Pago';
   }
-  
-  // Agregar desglose si hay múltiples conceptos
-  if (paymentConcept === 'Abono Múltiple') {
-    detalles += '\n\nDESGLOSE:';
-    if (transaction.ordinary > 0) {
-      detalles += `\n• Cuota Ordinaria: ${this.formatCurrency(transaction.ordinary)}`;
+
+  // Función para crear el cuerpo del correo
+  createEmailBody(transaction, paymentConcept, currentDate) {
+    let detalles = `• Concepto: ${paymentConcept}\n• Fecha: ${transaction.dateStr}\n• Monto: ${this.formatCurrency(transaction.deposit)}`;
+    
+    // Agregar observaciones si existen
+    if (transaction.note && transaction.note.trim() !== '') {
+      detalles += `\n• Observaciones: ${transaction.note}`;
     }
-    if (transaction.extraordinary > 0) {
-      detalles += `\n• Cuota Extraordinaria: ${this.formatCurrency(transaction.extraordinary)}`;
+    
+    // Agregar desglose si hay múltiples conceptos
+    if (paymentConcept === 'Abono Múltiple') {
+      detalles += '\n\nDESGLOSE:';
+      if (transaction.ordinary > 0) {
+        detalles += `\n• Cuota Ordinaria: ${this.formatCurrency(transaction.ordinary)}`;
+      }
+      if (transaction.extraordinary > 0) {
+        detalles += `\n• Cuota Extraordinaria: ${this.formatCurrency(transaction.extraordinary)}`;
+      }
+      if (transaction.others > 0) {
+        detalles += `\n• Otros Conceptos: ${this.formatCurrency(transaction.others)}`;
+      }
     }
-    if (transaction.others > 0) {
-      detalles += `\n• Otros Conceptos: ${this.formatCurrency(transaction.others)}`;
-    }
-  }
-  
-  return `Estimado(a) ${transaction.officialDisplayName},
+    
+    return `Estimado(a) ${transaction.officialDisplayName},
 
 Hemos registrado exitosamente su pago.
 
@@ -491,7 +555,7 @@ Tesorería - Segunda Compañía de Bomberos
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Este comprobante fue generado el ${currentDate}`;
-}
+  }
 
   downloadCurrentPdf() {
     if (!this.currentPdfDoc || !this.currentTransactionForModal) return;
@@ -559,8 +623,6 @@ Este comprobante fue generado el ${currentDate}`;
   formatCurrency(amount) { return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(amount || 0); }
 
   formatNameToTitleCase(name) { if (!name) return ''; return name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' '); }
-
-  showMessage(message, type = 'info', autoHide = true) { const fileInfo = document.getElementById('file-info'); fileInfo.textContent = message; fileInfo.className = `file-info ${type}`; fileInfo.style.display = 'block'; if (autoHide) { setTimeout(() => { if (fileInfo.textContent === message) fileInfo.style.display = 'none'; }, 5000); } }
 
   setupEventListeners() {
     document.getElementById('file-input').addEventListener('change', (e) => { if (e.target.files[0]) this.handleFileUpload(e.target.files[0]); e.target.value = null; });
