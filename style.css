@@ -195,7 +195,7 @@ body {
     margin: 0 auto;
     padding: 30px 20px;
     display: grid;
-    grid-template-columns: 400px 1fr;
+    grid-template-columns: 300px 1fr;
     gap: 30px;
     width: 100%;
 }
@@ -426,7 +426,10 @@ body {
 
 .action-buttons {
     display: flex;
-    gap: 10px;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-start;
+    width: auto;
 }
 
 .header-actions {
@@ -442,19 +445,19 @@ body {
 
 .stat-item {
     text-align: center;
-    padding: 15px;
+    padding: 10px;
     background: var(--gray-100);
     border-radius: var(--border-radius);
 }
 
 .stat-value {
-    font-size: 24px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--primary);
 }
 
 .stat-label {
-    font-size: 13px;
+    font-size: 11px;
     color: var(--gray-600);
     text-transform: uppercase;
 }
@@ -498,6 +501,17 @@ body {
 
 .data-table tbody tr {
     background: var(--white);
+    border-bottom: 1px solid #eee;
+
+}
+
+.data-table tbody tr:hover {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+
+.data-table tbody tr:hover td {
+    color: #333;
 }
 
 .data-table tbody tr:nth-child(even) {
@@ -514,29 +528,88 @@ body {
 
 .data-table th:nth-child(1),
 .data-table td:nth-child(1) {
-    width: 12%;
+    width: 8%;
 }
 
 .data-table th:nth-child(2),
 .data-table td:nth-child(2) {
-    width: 22%;
+    width: 18%;
+}
+
+.data-table th:nth-child(3),
+.data-table td:nth-child(3) {
+    width: 8%;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.btn-uncheck {
+    background-color: #e74c3c !important;
+    padding: 6px !important;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-uncheck:hover {
+    background-color: #c0392b !important;
 }
 
 .btn-vale {
-    padding: 5px 10px;
-    background: var(--info);
-    color: var(--white);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    background-color: #0c813d;
+    color: white;
     border: none;
-    border-radius: var(--border-radius);
+    border-radius: 4px;
     cursor: pointer;
     font-size: 12px;
+    white-space: nowrap;
+    transition: background-color 0.2s ease;
+    width: auto;
+    flex-shrink: 0;
+    min-width: 100px;
+}
+
+.btn-vale:hover {
+    background-color: #0a6b33;
+}
+
+/* Estilo para el botón de check */
+.btn-vale:has(i.fa-check),
+.btn-vale:has(i.fa-times) {
+    padding: 6px !important;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 28px;
+    background-color: #2ecc71;
+}
+
+.btn-vale:has(i.fa-check):hover,
+.btn-vale:has(i.fa-times):hover {
+    background-color: #27ae60;
+}
+
+.btn-vale:has(i.fa-times) {
+    background-color: #e74c3c;
+}
+
+.btn-vale:has(i.fa-times):hover {
+    background-color: #c0392b;
 }
 
 .btn-vale:disabled {
-    background: var(--success);
-    color: var(--white);
+    background-color: #95a5a6;
     cursor: not-allowed;
-    opacity: 0.8;
+    opacity: 1;
 }
 
 .no-data-message {
@@ -733,4 +806,76 @@ body {
         max-height: none;
         overflow: visible;
     }
+}
+
+#toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+}
+
+.toast {
+  background: white;
+  color: #333;
+  padding: 12px 24px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 250px;
+  max-width: 350px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.toast.success {
+  border-left: 4px solid #2ecc71;
+}
+
+.toast.error {
+  border-left: 4px solid #e74c3c;
+}
+
+.toast.info {
+  border-left: 4px solid #3498db;
+}
+
+.toast i {
+  font-size: 16px;
+}
+
+.toast.success i {
+  color: #2ecc71;
+}
+
+.toast.error i {
+  color: #e74c3c;
+}
+
+.toast.info i {
+  color: #3498db;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
 }
