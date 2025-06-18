@@ -434,7 +434,87 @@ body {
 
 .header-actions {
     display: flex;
-    gap: 10px;
+    align-items: center;
+    gap: 16px;
+}
+
+.btn-generate {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: #0c813d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.btn-generate:hover {
+    background-color: #0a6b33;
+}
+
+.btn-generate i {
+    font-size: 16px;
+}
+
+/* Estilos para el formulario */
+.form-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-weight: 500;
+    color: #333;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    height: 36px;
+}
+
+.form-group textarea {
+    min-height: 80px;
+    resize: vertical;
+    height: auto;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+.form-actions .btn-generate {
+    height: 36px;
+    padding: 0 16px;
+}
+
+/* Ajustes para el modal de generar vale */
+#generate-vale-modal .modal-content {
+    max-width: 800px;
+    width: 100%;
 }
 
 .stats-grid {
@@ -878,4 +958,32 @@ body {
     transform: translateX(100%);
     opacity: 0;
   }
+}
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.filter-actions button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.filter-actions .btn-apply {
+  background-color: #0c813d;
+  color: white;
+}
+
+.filter-actions .btn-clear {
+  background-color: #95a5a6;
+  color: white;
 }
